@@ -1,0 +1,21 @@
+This Programm verifies which 16S variable region was sequenced.
+
+Input:
+    .fastq file containing 16S sequencing reads
+Output:
+    print()
+    How many Reads were unaligned
+    Which Region was most aligned and how high is the proability of this being the sequenced Region
+    
+    If no 16S Region was sequenced many reads will be unaligned
+
+Requirements:
+    python 3
+    bowtie2
+    samtools
+    bedtools
+    Module: os
+    Module: subprocess
+    Module: argparse
+    Module: tempfile
+    Module: shutil
