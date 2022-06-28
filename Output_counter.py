@@ -4,16 +4,26 @@ import os
 import csv
 
 
-def create_output(path, file_name, unaligned_count, most_probable_V, probability, dir_name, dir_path):
-    dir_path = dir_name.replace(dir_path, '')
-    dir_name = dir_path.split('/')[-2]
+def directory_navi(file_name, path, dir_name, dir_path):
+    dir_path = dir_name.replace(dir_path, '', 1)
+    dir_name = dir_path.split('/')[-1]
+    dir_path = dir_path.replace(dir_name, '')
+    dir_path = path+'Output/'+dir_path
+    os.makedirs(dir_path, exist_ok=True)
     if file_name.endswith('.gz'):
         file_name = file_name.rsplit('.', 2)[0]
     else:
         file_name = file_name.rsplit('.', 1)[0]
+
+    return file_name, dir_name, dir_path
+
+
+
+def create_output(path, file_name, unaligned_count, most_probable_V, probability, dir_name, dir_path):
+    file_name, dir_name, dir_path = directory_navi(file_name, path, dir_name, dir_path)
     unaligned_count = unaligned_count.split(' ')[1]
     unaligned_count = float(unaligned_count.strip('()%'))
-    new_file = path+'Output/'+ dir_name +'.csv'
+    new_file = dir_path + dir_name +'.csv'
     if os.path.exists(new_file):
         header = True
     else:
