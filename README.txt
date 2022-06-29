@@ -19,3 +19,7 @@ Requirements:
     Module: argparse
     Module: tempfile
     Module: shutil
+
+To Do:
+	-Error Message: query [...] is marked as paired, but its mate does not occur next to it in your BAM file
+	-Multiple variable regions as a possibility for the most probable region
