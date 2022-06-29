@@ -6,7 +6,10 @@ import csv
 
 def directory_navi(file_name, path, dir_name, dir_path):
     dir_path = dir_name.replace(dir_path, '', 1)
-    dir_name = dir_path.split('/')[-1]
+    if dir_name.split('/')[-1] == '':
+        dir_name = dir_name.split('/')[-2]
+    else:
+        dir_name = dir_name.split('/')[-1]
     dir_path = dir_path.replace(dir_name, '')
     dir_path = path+'Output/'+dir_path
     os.makedirs(dir_path, exist_ok=True)

@@ -11,12 +11,12 @@ import files_manager
 def workflow(path, temp_path, file_path, file_type, file_name, dir_name, dir_path, mode, read2_file):
     interact_bowtie2.buildbowtie2(path)
     if file_type != None:        
-        aligned_path = interact_bowtie2.mapbowtie2(file_path, read2_file, path, temp_path, file_type, mode)	#The Programm bowtie2 is used to align the Reads to a reference 16S database.
+        aligned_path = interact_bowtie2.mapbowtie2(file_path, read2_file, path, temp_path, mode, file_type)	#The Programm bowtie2 is used to align the Reads to a reference 16S database.
     else:
         aligned_path = interact_bowtie2.mapbowtie2(file_path,read2_file, path, temp_path, mode, file_type=' -q' )
     interact_bedtools.overlap(path, temp_path, aligned_path)	#look which reads intersect with which variable Region
     Output_counter.count(temp_path, file_name, file_type, path, dir_name, dir_path)	#counts the Variable Regions that are found with bedtools and prints the highest probable variable Region
-
+    print('one workflow')
 
 
 def main():
