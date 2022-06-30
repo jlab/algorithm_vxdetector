@@ -2,12 +2,12 @@ This Programm verifies which 16S variable region was sequenced.
 
 Input:
     .fastq file containing 16S sequencing reads
+    or a Directory containing (or subfolders containing) fasta or fastq files
 Output:
-    print()
-    How many Reads were unaligned
-    Which Region was most aligned and how high is the proability of this being the sequenced Region
+    print(Probabilities for every region)
+    CSV file containing read_designation, Percentage unaligned reads, Probabilities of every region
+  
     
-    If no 16S Region was sequenced many reads will be unaligned
 
 Requirements:
     python 3
@@ -19,7 +19,10 @@ Requirements:
     Module: argparse
     Module: tempfile
     Module: shutil
+    Module: itertools
+    Module: csv
 
 To Do:
-	-Error Message: query [...] is marked as paired, but its mate does not occur next to it in your BAM file
-	-Multiple variable regions as a possibility for the most probable region
+	-Currently the used programms are refrenced by hardcoded paths
+            -> not usable on PCs where these programms are saved somewhere else
+        -Adding other functions such as primer verification or making the programm more efficiant
