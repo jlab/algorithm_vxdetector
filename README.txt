@@ -2,12 +2,12 @@ This Programm verifies which 16S variable region was sequenced.
 
 Input:
     .fastq file containing 16S sequencing reads
+    or a Directory containing (or subfolders containing) fasta or fastq files
 Output:
-    print()
-    How many Reads were unaligned
-    Which Region was most aligned and how high is the proability of this being the sequenced Region
+    print(Probabilities for every region)
+    CSV file containing read_designation, Percentage unaligned reads, Probabilities of every region
+  
     
-    If no 16S Region was sequenced many reads will be unaligned
 
 Requirements:
     python 3
@@ -25,7 +25,4 @@ Requirements:
             -> not usable on PCs where these programms are saved somewhere else
         -Currently only the single most probable region is shown. 
             -> Modify in a way that reads spanning multiple regions are shown correctly
-        -Programm filters out all fastq files that contain "_R2_"
-            -> Is that the universal way of declaring reverse Reads?
-        -Current Output is csv
         -Adding other functions such as primer verification or making the programm more efficiant
