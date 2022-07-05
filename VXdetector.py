@@ -23,7 +23,6 @@ def main():
     parser = argparse.ArgumentParser(prog= 'VX detector', description= 'This programm tries to find which variable region of the 16S sequence was sequencend')
     parser.add_argument('-d', '--directory', dest='dir_path', help='Directory path of the directory containing multiple fastq or fasta files.' )
     parser.add_argument('-sf', '--single-file', dest='fasta_file', default=None,help= 'Filepath of the fastq file containing the sequencences of which the variable regions are to be verified.')
-	#/homes/jgroos/Downloads/study_raw_data_14513_062122-034504/per_sample_FASTQ/147774/5001_S229_L001_R1_001.fastq
     args = parser.parse_args()
     path = files_manager.get_lib()
     temp_path = files_manager.tmp_dir(path, temp_path='')
@@ -35,7 +34,7 @@ def main():
             for file in files:
                 mode = 'unpaired'
                 read2_file = ''
-                if '_R2_' in file:
+                if '_R2_' in file or '.barcodes.' in file or '_barcodes.' in file:
                     continue
                 if any(elements in file for elements in fastq_ext):
                     file_name = file
@@ -60,7 +59,6 @@ def main():
             print('There were no FASTA or FASTQ files with 16S sequences in this directory')
     else:
         workflow(path, temp_path, args.fasta_file, file_type, file_name='Your file', dir_name='', dir_path='', mode='unpaired', read2_file='')
-    #quit() #keeps the tmp folder for troubleshooting
     files_manager.tmp_dir(path, temp_path)
 
 if __name__ == '__main__':

@@ -26,26 +26,31 @@ def rawincount(filename):
     return sum( buf.count(b'\n') for buf in bufgen )
 
 
-def region_count(dictionary, temp_path, all_reads, mode):
+def region_count(dictionary, unaligned_count ,temp_path, all_reads, mode):
     if temp_path != None and mode == 'paired':
         unpaired = round((rawincount(f'{temp_path}bed.log')/all_reads), 2)
     elif mode == 'unpaired':
         unpaired = 'unpaired Reads'
     no_V = rawincount(f'{temp_path}noOver.bed')
+    aligned_count = 100 - unaligned_count
     count = sum([dictionary['V1'], dictionary['V2'],dictionary['V3'],dictionary['V4'],dictionary['V5'],dictionary['V6'],dictionary['V7'], dictionary['V8'], dictionary['V9'], no_V])
-    dictionary['V1'] = round((dictionary['V1']/count)*100, 2)
-    dictionary['V2'] = round((dictionary['V2']/count)*100, 2)
-    dictionary['V3'] = round((dictionary['V3']/count)*100, 2)
-    dictionary['V4'] = round((dictionary['V4']/count)*100, 2)
-    dictionary['V5'] = round((dictionary['V5']/count)*100, 2)
-    dictionary['V6'] = round((dictionary['V6']/count)*100, 2)
-    dictionary['V7'] = round((dictionary['V7']/count)*100, 2)
-    dictionary['V8'] = round((dictionary['V8']/count)*100, 2)
-    dictionary['V9'] = round((dictionary['V9']/count)*100, 2)
-    no_V = round((no_V/count)*100, 2)
-    #dictionary = sorted(dictionary.items(), key=lambda x:x[1], reverse=True)
-    most_probable_V = [x[0] for x in sorted(list(dictionary.items())) if x[1]>20]
-    most_probable_V = ''.join(most_probable_V)
+    dictionary['V1'] = round((dictionary['V1']/count)* aligned_count, 2)
+    dictionary['V2'] = round((dictionary['V2']/count)* aligned_count, 2)
+    dictionary['V3'] = round((dictionary['V3']/count)* aligned_count, 2)
+    dictionary['V4'] = round((dictionary['V4']/count)*aligned_count, 2)
+    dictionary['V5'] = round((dictionary['V5']/count)* aligned_count, 2)
+    dictionary['V6'] = round((dictionary['V6']/count)*aligned_count, 2)
+    dictionary['V7'] = round((dictionary['V7']/count)*aligned_count, 2)
+    dictionary['V8'] = round((dictionary['V8']/count)*aligned_count, 2)
+    dictionary['V9'] = round((dictionary['V9']/count)*aligned_count, 2)
+    no_V = round((no_V/count)*aligned_count, 2)
+    if aligned_count == 0 or (no_V/aligned_count) == 1 :
+        most_probable_V = 'No variable Region'
+    else:
+        most_probable_V = [x[0].replace('V', '') for x in sorted(list(dictionary.items())) if ((x[1]/aligned_count) *100)>20]
+        most_probable_V = 'V' + ''.join(most_probable_V)
+        if most_probable_V == 'V':
+            most_probable_V = 'No variable Region'
     return most_probable_V, dictionary, unpaired, no_V
 
 
@@ -53,21 +58,23 @@ def region_count(dictionary, temp_path, all_reads, mode):
 
 def create_output(path, file_name, unaligned_count, dictionary, dir_name, dir_path, temp_path, all_reads, mode):
     file_name, dir_name, dir_path = directory_navi(file_name, path, dir_name, dir_path)
+    if mode == 'paired':
+        file_name = file_name.replace('_R1_001', '')
     new_file = f'{dir_path}{dir_name}.csv'
-    most_probable_V, dictionary, unpaired, no_V = region_count(dictionary, temp_path, all_reads, mode)
+    most_probable_V, dictionary, unpaired, no_V = region_count(dictionary, unaligned_count, temp_path, all_reads, mode)
     if os.path.exists(new_file):
         header = True
     else:
         header = False
     with open(new_file, 'a', newline='') as o:
-        fieldnames = ['Read-file', 'Unaligned Reads [%]', 'Not properly paired', 'Sequenced variable region', 'V1', 'V2', 'V3', 'V4', 'V5', 'V6', 'V7', 'V8', 'V9', 'Not aligned to a variable region']
+        fieldnames = ['Read-file', 'Number of Reads' , 'Unaligned Reads [%]', 'Not properly paired', 'Sequenced variable region', 'V1', 'V2', 'V3', 'V4', 'V5', 'V6', 'V7', 'V8', 'V9', 'Not aligned to a variable region']
         writer = csv.DictWriter(o, fieldnames=fieldnames)
         if header == False:
             writer.writeheader()
-        writer.writerow({'Read-file' : file_name, 'Unaligned Reads [%]' : unaligned_count,  'Not properly paired': unpaired, 'Sequenced variable region' : most_probable_V, 'V1': dictionary['V1'], 'V2': dictionary['V2'], 'V3' : dictionary['V3'], 'V4':dictionary['V4'], 'V5':dictionary['V5'], 'V6':dictionary['V6'], 'V7':dictionary['V7'], 'V8':dictionary['V8'], 'V9':dictionary['V9'], 'Not aligned to a variable region':no_V})
+        writer.writerow({'Read-file' : file_name, 'Number of Reads': all_reads , 'Unaligned Reads [%]' : unaligned_count,  'Not properly paired': unpaired, 'Sequenced variable region' : most_probable_V, 'V1': dictionary['V1'], 'V2': dictionary['V2'], 'V3' : dictionary['V3'], 'V4':dictionary['V4'], 'V5':dictionary['V5'], 'V6':dictionary['V6'], 'V7':dictionary['V7'], 'V8':dictionary['V8'], 'V9':dictionary['V9'], 'Not aligned to a variable region':no_V})
 
-def print_output(dictionary, unaligned_count):
-    most_probable_V, dictionary = region_count(dictionary, temp_path=None, all_reads='', mode='')
+def print_output(dictionary, unaligned_count, number_aligned):
+    most_probable_V, dictionary = region_count(dictionary, unaligned_count, temp_path=None, all_reads='', mode='')
     dictionary['V1'] = str(dictionary['V1'])
     dictionary['V2'] = str(dictionary['V2'])
     dictionary['V3'] = str(dictionary['V3'])
@@ -100,7 +107,7 @@ def count(temp_path, file_name, file_type, path, dir_name, dir_path, mode):
     unaligned_count = unaligned_count.split()[0].replace('%', '')
     unaligned_count = round((100 - float(unaligned_count)), 2)
     if file_type == None:
-        print_output(dictionary, unaligned_count)
+        print_output(dictionary, unaligned_count, number_aligned)
     else:
         create_output(path, file_name, unaligned_count, dictionary, dir_name, dir_path, temp_path, all_reads, mode)
 

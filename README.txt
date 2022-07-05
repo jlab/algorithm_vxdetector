@@ -17,6 +17,7 @@ Requirements:
     Module: os
     Module: subprocess
     Module: argparse
+    Module: itertools
     Module: tempfile
     Module: shutil
 
