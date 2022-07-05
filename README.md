@@ -1,3 +1,5 @@
+![example branch parameter](https://github.com/jlab/algorithm_vxdetector/actions/workflows/github_tests.yml/badge.svg)
+
 This Programm verifies which 16S variable region was sequenced.
 
 Input:
