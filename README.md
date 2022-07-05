@@ -1,4 +1,5 @@
 ![example branch parameter](https://github.com/jlab/algorithm_vxdetector/actions/workflows/github_tests.yml/badge.svg)
+[![Coverage Status](https://coveralls.io/repos/github/jlab/algorithm_vxdetector/badge.svg?branch=master)](https://coveralls.io/github/jlab/algorithm_vxdetector?branch=master)
 
 This Programm verifies which 16S variable region was sequenced.
 
