@@ -1,0 +1,7 @@
+name: vxdetector
+channels:
+  - bioconda
+  - conda-forge
+  - defaults
+dependencies:
+  - flake8
