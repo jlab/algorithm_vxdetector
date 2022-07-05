@@ -10,15 +10,15 @@ jobs:
   build-linux:
     runs-on: ubuntu-latest
     
-  steps:
-  - name: Checkout Repo
-    uses: actions/checkout@v2
-  - name: Set up Python
-    uses: actions/setup-python@v2
-  - name: Install dependencies
-    run: |
-      # $CONDA is an environment variable pointing to the root of the miniconda directory
-      $CONDA/bin/conda env update --file environment.yml --name base
-  - name: Lint with flake8
-    run: |
-      $CONDA/bin/flake8 vxdetector/
+    steps:
+    - name: Checkout Repo
+      uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v2
+    - name: Install dependencies
+      run: |
+        # $CONDA is an environment variable pointing to the root of the miniconda directory
+        $CONDA/bin/conda env update --file environment.yml --name base
+    - name: Lint with flake8
+      run: |
+        $CONDA/bin/flake8 vxdetector/
