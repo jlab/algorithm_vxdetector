@@ -18,24 +18,28 @@ def directory_navi(file_name, path, dir_name, dir_path):
     return file_name, dir_name, dir_path
 
 
-
-def create_output(path, file_name, unaligned_count, most_probable_V, probability, dir_name, dir_path):
-    file_name, dir_name, dir_path = directory_navi(file_name, path, dir_name, dir_path)
+def create_output(path, file_name, unaligned_count, most_probable_V,
+                  probability, dir_name, dir_path):
+    file_name, dir_name, dir_path = directory_navi(file_name, path,
+                                                   dir_name, dir_path)
     unaligned_count = unaligned_count.split(' ')[1]
     unaligned_count = float(unaligned_count.strip('()%'))
-    new_file = dir_path + dir_name +'.csv'
+    new_file = dir_path + dir_name + '.csv'
     if os.path.exists(new_file):
         header = True
     else:
         header = False
     with open(new_file, 'a', newline='') as o:
-        fieldnames = ['Read-file', 'Unaligned Reads [%]', 'Sequenced variable region', 'Probability [%]']
+        fieldnames = ['Read-file', 'Unaligned Reads [%]',
+                      'Sequenced variable region', 'Probability [%]']
         writer = csv.DictWriter(o, fieldnames=fieldnames)
-        if header == False:
+        if header is False:
             writer.writeheader()
-        writer.writerow({'Read-file' : file_name, 'Unaligned Reads [%]' : unaligned_count, 'Sequenced variable region' : most_probable_V, 'Probability [%]' : probability})
-
-
+        writer.writerow({
+            'Read-file': file_name,
+            'Unaligned Reads [%]': unaligned_count,
+            'Sequenced variable region': most_probable_V,
+            'Probability [%]': probability})
 
 
 def count(count, temp_path, file_name, file_type, path, dir_name, dir_path):
@@ -49,8 +53,10 @@ def count(count, temp_path, file_name, file_type, path, dir_name, dir_path):
                 dictionary[line_list[-1]] = 1
             else:
                 dictionary[line_list[-1]] += 1
-                #counts all appearing variable Regions
-    dictionary = sorted(dictionary.items(), key=lambda x:x[1], reverse=True)	#sorts the Dictionary with all variable regions for extracting the most probable one
+                # counts all appearing variable Regions
+    # sorts the Dictionary with all variable regions for extracting the most
+    # probable one
+    dictionary = sorted(dictionary.items(), key=lambda x: x[1], reverse=True)
     most_probable_V = dictionary[0]
     most_probable_V_count = most_probable_V[1]
     most_probable_V = most_probable_V[0].strip('\n')
@@ -58,13 +64,12 @@ def count(count, temp_path, file_name, file_type, path, dir_name, dir_path):
     with open(Log_path, 'r') as log:
         lines = log.readlines()
         unaligned_count = lines[2].strip('\n\t ')
-    if file_type == None:
-        print( file_name + ': ')
+    if file_type is None:
+        print(file_name + ': ')
         print(unaligned_count)
-        print('The sequenced variable Region in this file is ' + most_probable_V + ' with a probability of ' + str(probability) + '%.')
+        print('The sequenced variable Region in this file is '
+              + most_probable_V + ' with a probability of '
+              + str(probability) + '%.')
     else:
-        create_output(path, file_name, unaligned_count, most_probable_V, probability, dir_name, dir_path)
-
-
-
-
+        create_output(path, file_name, unaligned_count, most_probable_V,
+                      probability, dir_name, dir_path)
