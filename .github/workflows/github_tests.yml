@@ -22,3 +22,9 @@ jobs:
     - name: Lint with flake8
       run: |
         $CONDA/bin/flake8 vxdetector/
+    - name: run python tests
+      run: nosetests vxdetector --with-coverage --with-doctest
+    - name: Coveralls
+      uses: coverallsapp/github-action@master
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}

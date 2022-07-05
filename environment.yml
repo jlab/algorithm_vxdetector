@@ -5,3 +5,5 @@ channels:
   - defaults
 dependencies:
   - flake8
+  - nose
+  - coverage
