@@ -28,7 +28,11 @@ jobs:
     - name: convert coverage
       run: |
         $CONDA/bin/coverage lcov
+        ls -la
+        pwd
+        env
     - name: send coverage report
       uses: coverallsapp/github-action@master
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
+        path-to-lcov: "coverage.lcov"
