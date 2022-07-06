@@ -14,13 +14,13 @@ def workflow(path, temp_path, file_path, file_type, file_name, dir_name,
     if file_type is not None:
         # The Programm bowtie2 is used to align the Reads to a reference
         # 16S database.
-        aligned_path = interact_bowtie2.mapbowtie2(file_path, read2_file, 
-						   path, temp_path, mode, 
-						   file_type)
+        aligned_path = interact_bowtie2.mapbowtie2(file_path, read2_file,
+                                                   path, temp_path, mode,
+                                                   file_type)
     else:
-        aligned_path = interact_bowtie2.mapbowtie2(file_path,read2_file,
-						   path, temp_path, mode,
-						   file_type=' -q' )
+        aligned_path = interact_bowtie2.mapbowtie2(file_path, read2_file,
+                                                   path, temp_path, mode,
+                                                   file_type=' -q')
     # look which reads intersect with which variable Region
     interact_bedtools.overlap(path, temp_path, aligned_path)
     # counts the Variable Regions that are found with bedtools and prints the
@@ -56,8 +56,8 @@ def main():
                     continue
                 if any(elements in file for elements in fastq_ext):
                     file_name = file
-                    read2_file = os.path.join(root, file.replace('_R1_', 
-							       '_R2_'))
+                    read2_file = os.path.join(root, file.replace('_R1_',
+                                                                 '_R2_'))
                     rev_exists = os.path.exists(read2_file)
                     if '_R1_' in file_name and rev_exists is True:
                         mode = 'paired'
@@ -66,8 +66,8 @@ def main():
                     file_type = ' -q'
                 elif any(elements in file for elements in fasta_ext):
                     file_name = file
-                    read2_file = os.path.join(root, file.replace('_R1_', 
-							       '_R2_'))
+                    read2_file = os.path.join(root, file.replace('_R1_',
+                                                                 '_R2_'))
                     rev_exists = os.path.exists(read2_file)
                     if '_R1_' in file_name and rev_exists is True:
                         mode = 'paired'
@@ -83,8 +83,8 @@ def main():
                   'in this directory')
     else:
         workflow(path, temp_path, args.fasta_file, file_type,
-                 file_name='Your file', dir_name='', dir_path='', 
-		 mode='unpaired', read2_file='')
+                 file_name='Your file', dir_name='', dir_path='',
+                 mode='unpaired', read2_file='')
     # quit() #keeps the tmp folder for troubleshooting
     files_manager.tmp_dir(path, temp_path)
 
