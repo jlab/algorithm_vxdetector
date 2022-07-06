@@ -9,7 +9,7 @@ on:
 jobs:
   build-linux:
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Checkout Repo
       uses: actions/checkout@v2
@@ -24,9 +24,11 @@ jobs:
         $CONDA/bin/flake8 vxdetector/
     - name: run python tests
       run: |
-        $CONDA/bin/nosetests vxdetector --with-coverage --with-doctest
-    - name: Coveralls
+        $CONDA/bin/nosetests vxdetector --with-doctest
+    - name: collect coverage
+      run: |
+        $CONDA/bin/coverage lcov
+    - name: send coverage report
       uses: coverallsapp/github-action@master
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
-        path-to-lcov: ".coverage"
