@@ -24,13 +24,8 @@ jobs:
         $CONDA/bin/flake8 vxdetector/
     - name: run python tests
       run: |
-        $CONDA/bin/nosetests vxdetector --with-doctest
-    - name: DEBUG
-      run: |
-        ls -la $CONDA/bin/
-        cat $CONDA/bin/coverage
-        $CONDA/bin/coverage --help
-    - name: collect coverage
+        $CONDA/bin/nosetests vxdetector --with-doctest --with-coverage
+    - name: convert coverage
       run: |
         $CONDA/bin/coverage lcov
     - name: send coverage report
