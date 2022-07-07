@@ -1,13 +1,18 @@
 #!/usr/bin/python
 
 import os
+import shutil
 # from Output_counter import directory_navi
+# necessery for the delevopmental codeblock at the end
+
+bowtie2_path = shutil.which('bowtie2')
+samtools_path = shutil.which('samtools')
+bedtools_path = shutil.which('bedtools')
 
 
 def buildbowtie2(path):
-    bowtie2_path = '/usr/bin/bowtie2-build'
-    # reference genome greengenes is used
     input_ref = f'{path}Indexed_bt2/85_otus.fasta'
+    # reference genome greengenes is used
     output_path = f'{path}Indexed_bt2/bowtie2'
     if os.path.exists(f'{output_path}.1.bt2'):
         # only builds an index for the alignment if there isn't already one
@@ -18,29 +23,36 @@ def buildbowtie2(path):
 
 
 def mapbowtie2(fasta_file, read2_file, path, temp_path, mode, file_type):
-    bowtie2_path = '/usr/bin/bowtie2'
-    samtools_path = '/usr/bin/samtools'
-    bedtools_path = '/usr/bin/bedtools'
     index_path = f'{path}Indexed_bt2/bowtie2'
     log_path = f'{temp_path}bowtie2.log'
     bed_logpath = f'{temp_path}bed.log'
+    # declares various filepaths
     if mode == 'unpaired':
         aligned_path = f'{temp_path}unpaired.bam'
         cmd = f'{bowtie2_path} -x {index_path} {file_type} -U {fasta_file} \
                  --fast 2> {log_path} | {samtools_path} view -b -S -F 4 \
                  -o {aligned_path}'
+        # Should no backward read be found it will just use the forward
+        # read and does an alignment followed by a pipe to convert
+        # the bowtie2 output .sam to a .bam file.
     else:
         aligned_path = f'{temp_path}paired.bed'
         cmd = f'{bowtie2_path} -x {index_path} -1 {fasta_file} -2 {read2_file} \
                 --fast 2> {log_path} | {samtools_path} view -b -S -F 4 | \
                 {bedtools_path} bamtobed -bedpe -i stdin > {aligned_path} \
                 2> {bed_logpath}'
+        # Should a backward read be found both files will be given to bowtie2.
+        # After converting .sam to .bam a conversion to .bed is done to
+        # properly mate the pairs.
     os.system(cmd)
 
     return aligned_path
 
 
 '''
+# This Block is a developmental alternative to the mapbowtie2 function above
+# which writes a .sam file instead of piping it directly to a .bam converter.
+# There is a need to change the given parameters in VXdetector.py
 def mapbowtie2(fasta_file, read2_file, path, temp_path, mode, \
                file_name, dir_name, dir_path, file_type):
     file_name, dir_name, dir_path = directory_navi(file_name, path, \

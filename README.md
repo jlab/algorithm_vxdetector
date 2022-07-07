@@ -9,22 +9,11 @@ Input:
 Output:
     print(Probabilities for every region)
     CSV file containing read_designation, Percentage unaligned reads, Probabilities of every region
-  
-    
+
+
 
 Requirements:
     python 3
     bowtie2
     samtools
     bedtools
-    Module: os
-    Module: subprocess
-    Module: argparse
-    Module: itertools
-    Module: tempfile
-    Module: shutil
-    
-    To Do List:
-        -Currently the used programms are refrenced by hardcoded paths
-            -> not usable on PCs where these programms are saved somewhere else
-        -Adding other functions such as primer verification or making the programm more efficiant
