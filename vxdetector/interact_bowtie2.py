@@ -19,7 +19,7 @@ def buildbowtie2(path):
         pass
     else:
         # if a indexfile is missing a new index is build
-        os.system(f'{bowtie2_path} -f {input_ref} {output_path}')
+        os.system(f'{bowtie2_path}-build -f {input_ref} {output_path}')
 
 
 def mapbowtie2(fasta_file, read2_file, path, temp_path, mode, file_type):

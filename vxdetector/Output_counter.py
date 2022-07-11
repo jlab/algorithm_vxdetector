@@ -4,8 +4,8 @@ import os
 import csv
 from itertools import (takewhile, repeat)
 
-dictionary = {'V1': 0, 'V2': 0, 'V3': 0, 'V4': 0, 'V5': 0,
-              'V6': 0, 'V7': 0, 'V8': 0, 'V9': 0}
+regions = {'V1': 0, 'V2': 0, 'V3': 0, 'V4': 0, 'V5': 0,
+           'V6': 0, 'V7': 0, 'V8': 0, 'V9': 0}
 # declares the dictionary containing all variable regions as
 # a global variable. That way it can be easily accessed and modified
 
@@ -14,12 +14,8 @@ def directory_navi(file_name, path, dir_name, dir_path):
     dir_path = dir_name.replace(dir_path, '', 1)
     # only leaves the part in the directory tree between
     # the file and the original given directory path
-    if dir_name.split('/')[-1] == '':
-        dir_name = dir_name.split('/')[-2]
-    else:
-        dir_name = dir_name.split('/')[-1]
-    dir_path = dir_path.replace(dir_name, '')
-    dir_path = f'{path}Output/{dir_path}'
+    dir_name = os.path.basename(dir_name)
+    dir_path = f'{path}Output/{os.path.dirname(dir_path)}'
     # This block should set dir_path in such a way that
     # the directory structure found in the original given
     # directory is mirrored
@@ -51,11 +47,11 @@ def region_count(unaligned_count, temp_path, mode, all_reads):
     no_V = rawincount(f'{temp_path}noOver.bed')
     # counts the number of reads not mapped to any variable region
     aligned_count = 100 - unaligned_count
-    count = sum([dictionary['V1'], dictionary['V2'], dictionary['V3'],
-                dictionary['V4'], dictionary['V5'], dictionary['V6'],
-                dictionary['V7'], dictionary['V8'], dictionary['V9'], no_V])
-    for key in dictionary:
-        dictionary[key] = (dictionary[key] / count) * aligned_count
+    count = sum([regions['V1'], regions['V2'], regions['V3'],
+                regions['V4'], regions['V5'], regions['V6'],
+                regions['V7'], regions['V8'], regions['V9'], no_V])
+    for key in regions:
+        regions[key] = (regions[key] / count) * aligned_count
     no_V = (no_V/count)*aligned_count
     # Calculates the percantage of reads mapped to either a specific
     # region or no region
@@ -63,7 +59,7 @@ def region_count(unaligned_count, temp_path, mode, all_reads):
         most_probable_V = 'No variable Region'
     else:
         most_probable_V = [x[0].replace('V', '') for x in
-                           sorted(list(dictionary.items()))
+                           sorted(list(regions.items()))
                            if ((x[1] / aligned_count) * 100) > 20]
         most_probable_V = 'V' + ''.join(most_probable_V)
         if most_probable_V == 'V':
@@ -81,7 +77,7 @@ def create_output(path, file_name, unaligned_count, dir_name,
                                                    dir_name, dir_path)
     if mode == 'paired':
         file_name = file_name.replace('_R1_001', '')
-    new_file = f'{dir_path}{dir_name}.csv'
+    new_file = f'{dir_path}/{dir_name}.csv'
     # The new file is named after the directory containing the reads
     most_probable_V, unpaired, no_V = region_count(unaligned_count, temp_path,
                                                    mode, all_reads)
@@ -90,6 +86,10 @@ def create_output(path, file_name, unaligned_count, dir_name,
     else:
         header = False
     # The header will only be written if it wasnt written before
+    foo = {'file_name': file_name, 'all_reads': all_reads,
+           'unaligned_count': unaligned_count, 'unpaired': unpaired,
+           'no_V': no_V, 'most_probable_V': most_probable_V}
+    foo.update(regions)
     with open(new_file, 'a', newline='') as o:
         fieldnames = ['Read-file', 'Number of Reads', 'Unaligned Reads [%]',
                       'Not properly paired', 'Sequenced variable region', 'V1',
@@ -98,18 +98,19 @@ def create_output(path, file_name, unaligned_count, dir_name,
         writer = csv.DictWriter(o, fieldnames=fieldnames)
         if header is False:
             writer.writeheader()
-        for key in dictionary:
-            dictionary[key] = round(dictionary[key], 2)
-        writer.writerow({'Read-file': file_name, 'Number of Reads': all_reads,
-                         'Unaligned Reads [%]': round(unaligned_count, 2),
-                         'Not properly paired': unpaired,
-                         'Sequenced variable region': most_probable_V,
-                         'V1': dictionary['V1'], 'V2': dictionary['V2'],
-                         'V3': dictionary['V3'], 'V4': dictionary['V4'],
-                         'V5': dictionary['V5'], 'V6': dictionary['V6'],
-                         'V7': dictionary['V7'], 'V8': dictionary['V8'],
-                         'V9': dictionary['V9'],
-                         'Not aligned to a variable region': round(no_V, 2)})
+        for key in foo:
+            if isinstance(foo[key], float):
+                foo[key] = round(foo[key], 2)
+        writer.writerow({'Read-file': foo['file_name'], 'Number of Reads':
+                         foo['all_reads'], 'Unaligned Reads [%]':
+                         foo['unaligned_count'], 'Not properly paired':
+                         foo['unpaired'], 'Sequenced variable region':
+                         foo['most_probable_V'], 'V1': foo['V1'],
+                         'V2': foo['V2'], 'V3': foo['V3'],
+                         'V4': foo['V4'], 'V5': foo['V5'],
+                         'V6': foo['V6'], 'V7': foo['V7'],
+                         'V8': foo['V8'], 'V9': foo['V9'],
+                         'Not aligned to a variable region': foo['no_V']})
 
 
 def print_output(unaligned_count, temp_path, mode):
@@ -119,7 +120,7 @@ def print_output(unaligned_count, temp_path, mode):
     print(f'Of all the aligned Reads most were aligned to: {most_probable_V}')
     print('The probabilities of all regions is as follows [%]:')
     print('\n'.join(':'.join((key, str(round(val, 2))))
-          for (key, val) in dictionary.items()))
+          for (key, val) in regions.items()))
     print(f'\nAnd {round(no_V, 2)}% were not mapped to any variable region\n')
 
 
@@ -129,7 +130,7 @@ def count(temp_path, file_name, file_type, path, dir_name, dir_path, mode):
     with open(BED_path, 'r') as bed:
         for line in bed:
             line_list = line.split('\t')
-            dictionary[line_list[-1].strip('\n')] += 1
+            regions[line_list[-1].strip('\n')] += 1
             # counts all appearing variable Regions
     with open(Log_path, 'r') as log:
         lines = log.readlines()
