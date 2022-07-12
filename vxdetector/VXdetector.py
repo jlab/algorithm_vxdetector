@@ -6,10 +6,37 @@ import interact_bowtie2
 import interact_bedtools
 import Output_counter
 import files_manager
+import pandas as pd
+
+output = pd.DataFrame({'Read-file': [], 'Number of Reads': [],
+                       'Unaligned Reads [%]': [],
+                       'Not properly paired': [],
+                       'Sequenced variable region': [],
+                       'V1': [], 'V2': [], 'V3': [],
+                       'V4': [], 'V5': [], 'V6': [],
+                       'V7': [], 'V8': [], 'V9': [],
+                       'Not aligned to a variable region': []})
 
 
-def workflow(path, temp_path, file_path, file_type, file_name, dir_name,
-             dir_path, mode, read2_file):
+def do_statistic():
+    global output
+    avarage = output.mean(numeric_only=True).round(2).to_frame().T
+    avarage['Read-file'] = ['Average']
+    avarage['Sequenced variable region'] = (output.iloc[:, [4]].
+                                            mode().values.tolist())
+    std_dev = output.std(numeric_only=True).round(2).to_frame().T
+    std_dev['Read-file'] = ['Standard deviation']
+    statistic = pd.concat([avarage, std_dev], axis=0)
+    statistic = statistic[['Read-file', 'Number of Reads',
+                           'Unaligned Reads [%]', 'Not properly paired',
+                           'Sequenced variable region', 'V1', 'V2', 'V3',
+                           'V4', 'V5', 'V6', 'V7', 'V8', 'V9',
+                           'Not aligned to a variable region']]
+    output = pd.concat([statistic, output], axis=0)
+
+
+def workflow(path, temp_path, file_path, file_type, old_file_name,
+             file_name, dir_name, dir_path, mode, read2_file):
     interact_bowtie2.buildbowtie2(path)
     if file_type is not None:
         aligned_path = interact_bowtie2.mapbowtie2(file_path, read2_file,
@@ -23,8 +50,22 @@ def workflow(path, temp_path, file_path, file_type, file_name, dir_name,
     # 16S database.
     interact_bedtools.overlap(path, temp_path, aligned_path)
     # look which reads intersect with which variable Region
-    Output_counter.count(temp_path, file_name, file_type, path,
-                         dir_name, dir_path, mode)
+    if file_type is not None:
+        global output
+        new_row, new_file = Output_counter.count(temp_path, file_name,
+                                                 file_type, path, dir_name,
+                                                 dir_path, mode)
+        if new_file != old_file_name and old_file_name is not None:
+            output.sort_values(by=['Read-file'], inplace=True)
+            do_statistic()
+            output.to_csv(old_file_name, index=False)
+            output = output.iloc[0:0]
+        output = pd.concat([output, new_row], axis=0)
+        old_file_name = new_file
+        return new_file, old_file_name
+    else:
+        Output_counter.count(temp_path, file_name, file_type, path,
+                             dir_name, dir_path, mode)
     # counts the Variable Regions that are found with bedtools and prints the
     # highest probable variable Region (single file) or
     # writes a new file (directory)
@@ -50,6 +91,7 @@ def main():
     file_type = None
     fasta_ext = ('.fasta', '.fa', '.ffa', '.ffn', '.faa', '.frn')
     fastq_ext = ('.fq', '.fastq',)
+    old_file_name = None
     if args.fasta_file is None:
         # If a directory was given as input the programm will walk through
         # that directory and search for forward reads.
@@ -82,16 +124,22 @@ def main():
                     file_type = ' -f'
                 else:
                     continue
-                workflow(path, temp_path, file_path, file_type, file_name,
-                         dir_name, args.dir_path, mode, read2_file)
+                new_file, old_file_name = workflow(path, temp_path, file_path,
+                                                   file_type, old_file_name,
+                                                   file_name, dir_name,
+                                                   args.dir_path, mode,
+                                                   read2_file)
         if file_type is None:
             print('There were no FASTA or FASTQ files with 16S sequences '
                   'in this directory')
     else:
-        workflow(path, temp_path, args.fasta_file, file_type,
+        workflow(path, temp_path, args.fasta_file, file_type, old_file_name,
                  file_name='Your file', dir_name='', dir_path='',
                  mode='unpaired', read2_file='')
     files_manager.tmp_dir(path, temp_path)
+    if old_file_name is not None:
+        do_statistic()
+        output.to_csv(old_file_name, index=False)
 
 
 if __name__ == '__main__':
