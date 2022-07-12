@@ -1,30 +1,82 @@
 #!/usr/bin/python
 
 import os
-from os.path import exists
+import shutil
+# from Output_counter import directory_navi
+# necessery for the delevopmental codeblock at the end
+
+bowtie2_path = shutil.which('bowtie2')
+samtools_path = shutil.which('samtools')
+bedtools_path = shutil.which('bedtools')
 
 
 def buildbowtie2(path):
-    bowtie2_path = '/vol/software/bin/bowtie2-build'
+    input_ref = f'{path}Indexed_bt2/85_otus.fasta'
     # reference genome greengenes is used
-    input_ref = path + 'Indexed_bt2/85_otus.fasta'
-    output_path = path + 'Indexed_bt2/bowtie2'
-    if exists(output_path + '.1.bt2'):
+    output_path = f'{path}Indexed_bt2/bowtie2'
+    if os.path.exists(f'{output_path}.1.bt2'):
         # only builds an index for the alignment if there isn't already one
         pass
     else:
-        cmd = bowtie2_path + ' -f ' + input_ref + ' ' + output_path
         # if a indexfile is missing a new index is build
-        os.system(cmd)
+        os.system(f'{bowtie2_path}-build -f {input_ref} {output_path}')
 
 
-def mapbowtie2(fasta_file, path, temp_path, file_type):
+def mapbowtie2(fasta_file, read2_file, path, temp_path, mode, file_type):
+    index_path = f'{path}Indexed_bt2/bowtie2'
+    log_path = f'{temp_path}bowtie2.log'
+    bed_logpath = f'{temp_path}bed.log'
+    # declares various filepaths
+    if mode == 'unpaired':
+        aligned_path = f'{temp_path}unpaired.bam'
+        cmd = f'{bowtie2_path} -x {index_path} {file_type} -U {fasta_file} \
+                 --fast 2> {log_path} | {samtools_path} view -b -S -F 4 \
+                 -o {aligned_path}'
+        # Should no backward read be found it will just use the forward
+        # read and does an alignment followed by a pipe to convert
+        # the bowtie2 output .sam to a .bam file.
+    else:
+        aligned_path = f'{temp_path}paired.bed'
+        cmd = f'{bowtie2_path} -x {index_path} -1 {fasta_file} -2 {read2_file} \
+                --fast 2> {log_path} | {samtools_path} view -b -S -F 4 | \
+                {bedtools_path} bamtobed -bedpe -i stdin > {aligned_path} \
+                2> {bed_logpath}'
+        # Should a backward read be found both files will be given to bowtie2.
+        # After converting .sam to .bam a conversion to .bed is done to
+        # properly mate the pairs.
+    os.system(cmd)
+
+    return aligned_path
+
+
+'''
+# This Block is a developmental alternative to the mapbowtie2 function above
+# which writes a .sam file instead of piping it directly to a .bam converter.
+# There is a need to change the given parameters in VXdetector.py
+def mapbowtie2(fasta_file, read2_file, path, temp_path, mode, \
+               file_name, dir_name, dir_path, file_type):
+    file_name, dir_name, dir_path = directory_navi(file_name, path, \
+                                                   dir_name, dir_path)
+    SAM_path = f'{dir_path}{file_name}.sam'
     bowtie2_path = '/vol/software/bin/bowtie2'
     samtools_path = '/usr/bin/samtools'
-    index_path = path + 'Indexed_bt2/bowtie2'
-    log_path = temp_path + 'bowtie2.log'
-    BAM_path = temp_path + 'BAM.bam'
-    cmd = bowtie2_path + ' -x ' + index_path + file_type + ' -U ' \
-        + fasta_file + ' --fast 2> ' + log_path + ' | ' + samtools_path \
-        + ' view -b -S -F 4 -o ' + BAM_path
+    bedtools_path = '/usr/bin/bedtools'
+    index_path = f'{path}Indexed_bt2/bowtie2'
+    log_path = f'{temp_path}bowtie2.log'
+    bed_logpath = f'{temp_path}bed.log'
+    if mode == 'unpaired':
+        aligned_path = f'{temp_path}unpaired.bam'
+        cmd = f'{bowtie2_path} -x {index_path} {file_type} -U {fasta_file} \
+                --fast -S {SAM_path} 2> {log_path}'
+        cmd2 = f'{samtools_path} view -b -S -F 4 {SAM_path} -o {aligned_path}'
+    else:
+        aligned_path = f'{temp_path}paired.bed'
+        cmd = f'{bowtie2_path} -x {index_path} -1 {fasta_file} -2 \
+              {read2_file} --fast -S {SAM_path} 2> {log_path}'
+        cmd2 = f'{samtools_path} view -b -S -F 4  {SAM_path} | \
+                 {bedtools_path} bamtobed -bedpe -i \
+                 stdin > {aligned_path} 2> {bed_logpath}'
     os.system(cmd)
+    os.system(cmd2)
+    return aligned_path
+'''

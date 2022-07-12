@@ -1,32 +1,33 @@
 #!/usr/bin/python
 
 import argparse
-import interact_bowtie2
-import interact_samtools
-import interact_bedtools
 import os
+import interact_bowtie2
+import interact_bedtools
 import Output_counter
 import files_manager
 
 
 def workflow(path, temp_path, file_path, file_type, file_name, dir_name,
-             dir_path):
+             dir_path, mode, read2_file):
     interact_bowtie2.buildbowtie2(path)
     if file_type is not None:
-        # The Programm bowtie2 is used to align the Reads to a reference
-        # 16S database.
-        interact_bowtie2.mapbowtie2(file_path, path, temp_path, file_type)
+        aligned_path = interact_bowtie2.mapbowtie2(file_path, read2_file,
+                                                   path, temp_path, mode,
+                                                   file_type)
     else:
-        interact_bowtie2.mapbowtie2(file_path, path, temp_path,
-                                    file_type=' -q')
-    # convert the .sam file from bowtie2 to .bam for compability
-    count = interact_samtools.SAMtoBAM(path, temp_path)
+        aligned_path = interact_bowtie2.mapbowtie2(file_path, read2_file,
+                                                   path, temp_path, mode,
+                                                   file_type=' -q')
+    # The Programm bowtie2 is used to align the Reads to a reference
+    # 16S database.
+    interact_bedtools.overlap(path, temp_path, aligned_path)
     # look which reads intersect with which variable Region
-    interact_bedtools.overlap(path, temp_path)
+    Output_counter.count(temp_path, file_name, file_type, path,
+                         dir_name, dir_path, mode)
     # counts the Variable Regions that are found with bedtools and prints the
-    # highest probable variable Region
-    Output_counter.count(count, temp_path, file_name, file_type, path,
-                         dir_name, dir_path)
+    # highest probable variable Region (single file) or
+    # writes a new file (directory)
 
 
 def main():
@@ -41,39 +42,55 @@ def main():
                         help=('Filepath of the fastq file containing the '
                               'sequencences of which the variable regions '
                               'are to be verified.'))
-    # /homes/jgroos/Downloads/study_raw_data_14513_062122-034504/per_sample_FASTQ/147774/5001_S229_L001_R1_001.fastq
     args = parser.parse_args()
+    # allows terminal input
     path = files_manager.get_lib()
     temp_path = files_manager.tmp_dir(path, temp_path='')
+    # sets the paths of the programm itself and a temporary folder
     file_type = None
     fasta_ext = ('.fasta', '.fa', '.ffa', '.ffn', '.faa', '.frn')
     fastq_ext = ('.fq', '.fastq',)
     if args.fasta_file is None:
+        # If a directory was given as input the programm will walk through
+        # that directory and search for forward reads.
+        # If found it will look for its complementary backward read.
         for root, dirs, files in os.walk(args.dir_path, topdown=True):
             for file in files:
+                mode = 'unpaired'
+                read2_file = ''
                 if '_R2_' in file:
                     continue
                 if any(elements in file for elements in fastq_ext):
                     file_name = file
+                    read2_file = os.path.join(root, file.replace('_R1_',
+                                                                 '_R2_'))
+                    rev_exists = os.path.exists(read2_file)
+                    if '_R1_' in file_name and rev_exists is True:
+                        mode = 'paired'
                     dir_name = root
                     file_path = os.path.join(root, file)
                     file_type = ' -q'
                 elif any(elements in file for elements in fasta_ext):
                     file_name = file
+                    read2_file = os.path.join(root, file.replace('_R1_',
+                                                                 '_R2_'))
+                    rev_exists = os.path.exists(read2_file)
+                    if '_R1_' in file_name and rev_exists is True:
+                        mode = 'paired'
                     dir_name = root
                     file_path = os.path.join(root, file)
                     file_type = ' -f'
                 else:
                     continue
                 workflow(path, temp_path, file_path, file_type, file_name,
-                         dir_name, args.dir_path)
+                         dir_name, args.dir_path, mode, read2_file)
         if file_type is None:
             print('There were no FASTA or FASTQ files with 16S sequences '
                   'in this directory')
     else:
         workflow(path, temp_path, args.fasta_file, file_type,
-                 file_name='Your file', dir_name='', dir_path='')
-    # quit() #keeps the tmp folder for troubleshooting
+                 file_name='Your file', dir_name='', dir_path='',
+                 mode='unpaired', read2_file='')
     files_manager.tmp_dir(path, temp_path)
 
 
