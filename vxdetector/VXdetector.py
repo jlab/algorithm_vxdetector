@@ -22,8 +22,12 @@ def do_statistic():
     global output
     avarage = output.mean(numeric_only=True).round(2).to_frame().T
     avarage['Read-file'] = ['Average']
-    avarage['Sequenced variable region'] = (output.iloc[:, [4]].
-                                            mode().values.tolist())
+    region = (output.iloc[:, [4]].mode().values)
+    region = ' / '.join(str(r) for r in region)
+    region = region.replace('\'', '')
+    region = region.replace('[', '')
+    region = region.replace(']', '')
+    avarage['Sequenced variable region'] = region
     std_dev = output.std(numeric_only=True).round(2).to_frame().T
     std_dev['Read-file'] = ['Standard deviation']
     statistic = pd.concat([avarage, std_dev], axis=0)

@@ -19,6 +19,8 @@ new_row = pd.DataFrame({'Read-file': [''], 'Number of Reads': [0],
 
 def directory_navi(file_name, path, dir_name, dir_path):
     dir_path = dir_name.replace(dir_path, '', 1)
+    if dir_name.endswith('/'):
+        dir_name = dir_name.rstrip('/')
     # only leaves the part in the directory tree between
     # the file and the original given directory path
     dir_name = os.path.basename(dir_name)
@@ -31,7 +33,6 @@ def directory_navi(file_name, path, dir_name, dir_path):
         file_name = file_name.rsplit('.', 2)[0]
     else:
         file_name = file_name.rsplit('.', 1)[0]
-
     return file_name, dir_name, dir_path
 
 
@@ -39,7 +40,6 @@ def rawincount(filename):
     f = open(filename, 'rb')
     bufgen = takewhile(lambda x: x, (f.raw.read(1024*1024)
                                      for _ in repeat(None)))
-
     return sum(buf.count(b'\n') for buf in bufgen)
 
 
