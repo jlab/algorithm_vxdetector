@@ -20,17 +20,19 @@ output = pd.DataFrame({'Read-file': [], 'Number of Reads': [],
 
 def do_statistic():
     global output
-    avarage = output.mean(numeric_only=True).round(2).to_frame().T
-    avarage['Read-file'] = ['Average']
+    average = output.mean(numeric_only=True).round(2).to_frame().T
+    average['Read-file'] = ['Average']
     region = (output.iloc[:, [4]].mode().values)
     region = ' / '.join(str(r) for r in region)
     region = region.replace('\'', '')
     region = region.replace('[', '')
     region = region.replace(']', '')
-    avarage['Sequenced variable region'] = region
+    average['Sequenced variable region'] = region
+    if 'Not properly paired' not in average.index:
+        average['Not properly paired'] = 'not paired'
     std_dev = output.std(numeric_only=True).round(2).to_frame().T
     std_dev['Read-file'] = ['Standard deviation']
-    statistic = pd.concat([avarage, std_dev], axis=0)
+    statistic = pd.concat([average, std_dev], axis=0)
     statistic = statistic[['Read-file', 'Number of Reads',
                            'Unaligned Reads [%]', 'Not properly paired',
                            'Sequenced variable region', 'V1', 'V2', 'V3',
