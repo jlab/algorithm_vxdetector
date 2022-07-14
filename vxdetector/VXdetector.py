@@ -2,10 +2,10 @@
 
 import argparse
 import os
-import interact_bowtie2
-import interact_bedtools
-import Output_counter
-import files_manager
+from vxdetector.interact_bowtie2 import mapbowtie2, buildbowtie2
+from vxdetector.interact_bedtools import overlap
+from vxdetector import Output_counter
+import vxdetector.files_manager
 import pandas as pd
 
 output = pd.DataFrame({'Read-file': [], 'Number of Reads': [],
@@ -43,18 +43,18 @@ def do_statistic():
 
 def workflow(path, temp_path, file_path, file_type, old_file_name,
              file_name, dir_name, dir_path, mode, read2_file):
-    interact_bowtie2.buildbowtie2(path)
+    buildbowtie2(path)
     if file_type is not None:
-        aligned_path = interact_bowtie2.mapbowtie2(file_path, read2_file,
+        aligned_path = mapbowtie2(file_path, read2_file,
                                                    path, temp_path, mode,
                                                    file_type)
     else:
-        aligned_path = interact_bowtie2.mapbowtie2(file_path, read2_file,
+        aligned_path = mapbowtie2(file_path, read2_file,
                                                    path, temp_path, mode,
                                                    file_type=' -q')
     # The Programm bowtie2 is used to align the Reads to a reference
     # 16S database.
-    interact_bedtools.overlap(path, temp_path, aligned_path)
+    overlap(path, temp_path, aligned_path)
     # look which reads intersect with which variable Region
     if file_type is not None:
         global output
