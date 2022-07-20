@@ -77,14 +77,10 @@ def region_count(temp_path, mode):
 def create_row(path, file_name, dir_name, dir_path, temp_path, mode):
     file_name, dir_name, dir_path = directory_navi(file_name, path,
                                                    dir_name, dir_path)
-    if mode == 'paired':
-        new_row['Read-file'] = file_name.replace('_R1_001', '')
+    new_row['Read-file'] = file_name.replace('_R1_001', '')
     new_file = f'{dir_path}/{dir_name}.csv'
     # The new file is named after the directory containing the reads
     region_count(temp_path, mode)
-    for column in new_row:
-        if isinstance(new_row.at[0, column], float):
-            new_row.at[0, column] = round(new_row.at[0, column], 2)
     return new_file
 
 

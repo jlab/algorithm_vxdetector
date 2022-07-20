@@ -20,7 +20,7 @@ output = pd.DataFrame({'Read-file': [], 'Number of Reads': [],
 
 def do_statistic():
     global output
-    average = output.mean(numeric_only=True).round(2).to_frame().T
+    average = output.mean(numeric_only=True).to_frame().T
     average['Read-file'] = ['Average']
     region = (output.iloc[:, [4]].mode().values)
     region = ' / '.join(str(r) for r in region)
@@ -30,7 +30,7 @@ def do_statistic():
     average['Sequenced variable region'] = region
     if 'Not properly paired' not in average.index:
         average['Not properly paired'] = 'not paired'
-    std_dev = output.std(numeric_only=True).round(2).to_frame().T
+    std_dev = output.std(numeric_only=True).to_frame().T
     std_dev['Read-file'] = ['Standard deviation']
     statistic = pd.concat([average, std_dev], axis=0)
     statistic = statistic[['Read-file', 'Number of Reads',
@@ -45,16 +45,19 @@ def workflow(path, temp_path, file_path, file_type, old_file_name,
              file_name, dir_name, dir_path, mode, read2_file):
     interact_bowtie2.buildbowtie2(path)
     if file_type is not None:
-        aligned_path = interact_bowtie2.mapbowtie2(file_path, read2_file,
+        aligned_path, Error = interact_bowtie2.mapbowtie2(file_path, read2_file,
                                                    path, temp_path, mode,
                                                    file_type)
     else:
-        aligned_path = interact_bowtie2.mapbowtie2(file_path, read2_file,
+        aligned_path, Error = interact_bowtie2.mapbowtie2(file_path, read2_file,
                                                    path, temp_path, mode,
                                                    file_type=' -q')
     # The Programm bowtie2 is used to align the Reads to a reference
     # 16S database.
+    if Error is True:
+        return new_file, old_file_name
     interact_bedtools.overlap(path, temp_path, aligned_path)
+    quit()
     # look which reads intersect with which variable Region
     if file_type is not None:
         global output
