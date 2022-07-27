@@ -6,8 +6,7 @@ import io
 import os
 import sys
 
-os.system('ls -a $CONDA/lib/python3.9/site-packages/')
-import_path = '$CONDA/lib/python3.9/site-packages/'
+import_path = '$CONDA/lib/python3.9/site-packages/pandas'
 sys.path.append(import_path)
 import_path = f'{__file__.rsplit("/", 2)[0]}/'
 sys.path.append(import_path)
