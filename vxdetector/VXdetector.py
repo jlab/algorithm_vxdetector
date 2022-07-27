@@ -7,8 +7,7 @@ import sys
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
-
-for d in $CONDA/**/; do PATH="$PATH:$d"; done
+sys.path.append('$CONDA/lib/python3.9/site-packages')
 
 import pandas as pd  # noqa: E402
 from vxdetector.interact_bowtie2 import mapbowtie2, buildbowtie2  # noqa: E402
