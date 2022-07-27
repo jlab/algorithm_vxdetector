@@ -6,42 +6,84 @@ import shutil
 
 
 def tmp_dir(path, temp_path):
-    # creates a temporary folder
-    # if called again it will delete the temporary folder
-    if os.path.exists(temp_path):
-        shutil.rmtree(temp_path)
-    else:
+    r'''Creates and deletes a temporary folder
+
+    This function creates a temporary folder if none exists
+    and deletes the temporary folder if it does exist.
+
+    Parameters
+    ----------
+    path : str
+        The function needs to know where the temporary folder
+        should be created. In the context of this program the path
+        will always be the path of the program directory.
+    temp_path : str or None
+        Path of the temporary folder. If None a new temporary directory
+        will be created otherwise the directory specified here will be deleted.
+
+    Returns
+    -------
+    temp_path : str
+        Path to the created temporary folder.
+
+    '''
+    if temp_path is None or os.path.exists(temp_path) is False:
         temp_path = f"{tempfile.mkdtemp(prefix='tmp_files_', dir=path)}/"
+        return temp_path
+    else:
+        shutil.rmtree(temp_path)
 
-    return temp_path
 
+def get_lib(program_path=None):
+    r'''Checks necessary files
 
-def get_lib():
-    # looks for the required files (e.g. a greengenes reference file)
-    # and reports back if/what file(s) are missing
-    programm_path = f'{os.path.dirname(__file__)}'
-    programm_path = f"{programm_path.rsplit('/', 1)[0]}/"
-    if os.path.exists(f'{programm_path}Output/'):
+    This function checks if all necessery files are where they should be.
+    It also returns the program path.
+    Should a necessary file be missing it needs to be replaced.
+    annoted_ref.bed can be newly generated with the code provided
+    in vxdetector/Indexed_bt2/code_for_reference/
+
+    Parameter
+    ---------
+    program_path : None or str
+        Enables the user to manually call the function on a specific path.
+        Mainly used for testing.
+
+    Returns
+    -------
+    program_path : str
+        Path to the directory in which the programm files are stored.
+
+    '''
+    if program_path is None:
+        program_path = os.path.dirname(__file__)
+        program_path = f"{os.path.dirname(program_path)}/"
+    # finds the parent directory of the folder in which the
+    # program is saved
+    if os.path.exists(f'{program_path}Output/'):
         pass
     else:
-        os.mkdir(f'{programm_path}Output/')
-    if os.path.exists(f'{programm_path}Indexed_bt2/'):
-        if os.path.exists(f'{programm_path}Indexed_bt2/annoted_ref.bed'):
+        os.mkdir(f'{program_path}Output/')
+    # creates the standard output folder
+    if os.path.exists(f'{program_path}Indexed_bt2/'):
+        if os.path.exists(f'{program_path}Indexed_bt2/annoted_ref.bed'):
             pass
         else:
-            print('ERROR: It seems the 16S variable region boundary'
-                  ' reference file is missing.')
-        if os.path.exists(f'{programm_path}Indexed_bt2/85_otus.fasta'):
+            raise FileNotFoundError('ERROR: It seems the 16S variable '
+                                    'region boundary reference file is '
+                                    'missing.')
+        if os.path.exists(f'{program_path}Indexed_bt2/85_otus.fasta'):
             pass
         else:
-            print('ERROR: It seems the Greengenes "85_otus.fasta" file is'
-                  ' missing.')
-        if os.path.exists(f'{programm_path}Indexed_bt2/85_otus_aligned.fasta'):
+            raise FileNotFoundError('ERROR: It seems the Greengenes '
+                                    '"85_otus.fasta" file is missing.')
+        if os.path.exists(f'{program_path}Indexed_bt2/85_otus_aligned.fasta'):
             pass
         else:
-            print('ERROR: It seems the Greengenes "85_otus_aligned.fasta" '
-                  'file is missing.')
+            raise FileNotFoundError('ERROR: It seems the Greengenes '
+                                    '"85_otus_aligned.fasta" file is missing.')
     else:
-        print('ERROR: It seems the "Indexed_bt2" directory is missing.')
+        raise FileNotFoundError('ERROR: It seems the "Indexed_bt2" '
+                                'directory is missing.')
 
-    return programm_path
+    return program_path

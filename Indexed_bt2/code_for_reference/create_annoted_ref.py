@@ -7,11 +7,7 @@
 from os import path as p
 
 
-region = {}
-
-
-def write(seq_chrom, annoted_ref):
-    global region
+def write(seq_chrom, annoted_ref, region):
     with open(annoted_ref, 'a') as t:
         if 'V1_start' in region:
             for counter, key in enumerate(region):
@@ -25,8 +21,7 @@ def write(seq_chrom, annoted_ref):
     region.clear()
 
 
-def index(line):
-    global region
+def index(line, region):
     boundary = {'V1_start': 189, 'V1_end': 471,
                 'V2_start': 485, 'V2_end': 1867,
                 'V3_start': 1915, 'V3_end': 2231,
@@ -39,11 +34,12 @@ def index(line):
     '''
     The boundary positions were found using code provided by Tony Walters
     (http://qiime.org/home_static/nih_cloud-apr2012/variable_region_position_calculations.pdf).
-    It was then modified to allow for the additional search of the V1 rev, V2 fwd, V5, V7 and V8 boundary
-    positions.
+    It was then modified to allow for the additional search of the
+    V1 rev, V2 fwd, V5, V7 and V8 boundary positions.
     Primers used:
     V1: 27f / P2 (original code / Cocolin et al. 2001)
-    V2: V2f / 338r (modified V2-V3 fwd primer from "16S V2-V3 Library Preparation Kit for Illumina" / original code)
+    V2: V2f / 338r (modified V2-V3 fwd primer from "16S V2-V3 Library
+                    Preparation Kit for Illumina" / original code)
     V3: 349f / 534r (original code)
     V4: 515f / 806r (original code)
     V5: 806f / 926r (kindly provided by Tony Walters)
@@ -58,20 +54,21 @@ def index(line):
         list1 = ''.join(str(e) for e in list1)
         list1 = list1.replace('-', '')
         region[key] = int(list1.index('1')) + 1
-
+    return region
 
 
 def main():
     file_ = f'{p.dirname(p.dirname(__file__))}/85_otus_aligned.fasta'
     annoted_ref = f'{p.dirname(p.dirname(__file__))}/annoted_ref.bed'
     with open(file_, 'r') as f:
+        region = dict()
         for line in f:
             if line.startswith('>'):
                 seq_chrom = line[1:]
                 seq_chrom = seq_chrom.strip('\n')
             else:
-                index(line)
-                write(seq_chrom, annoted_ref)
+                region = index(line, region)
+                write(seq_chrom, annoted_ref, region)
 
 
 if __name__ == '__main__':

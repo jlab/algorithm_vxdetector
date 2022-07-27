@@ -25,9 +25,9 @@ description = 'VXdetector'
 setup(name='vxdetector',
       version='1.0.0',
       license='BSD',
-      #description=description,
-      #long_description=long_description,
-      #keywords=keywords,
+      # description=description,
+      # long_description=long_description,
+      # keywords=keywords,
       classifiers=classifiers,
       author="Johannes Groos",
       author_email="Johannes.Groos@bio.uni-giessen.de",
@@ -37,9 +37,9 @@ setup(name='vxdetector',
       test_suite='nose.collector',
       packages=find_packages(),
       install_requires=[
-          #'click >= 6',
-          #'scikit-bio >= 0.4.0',
+          # 'click >= 6',
+          # 'scikit-bio >= 0.4.0',
       ],
-      #extras_require={'test': ["nose", "pep8", "flake8"],
+      # extras_require={'test': ["nose", "pep8", "flake8"],
       #                      'coverage': ["coverage"]}
-)
+      )
