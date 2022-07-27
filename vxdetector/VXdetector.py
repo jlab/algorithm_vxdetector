@@ -1,14 +1,16 @@
 #!/usr/bin/python
 
 import argparse
-import pandas as pd
 import glob
 import os
 import sys
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
+import_path = '$CONDA/lib/python3.9/site-packages/'
+sys.path.append(import_path)
 
+import pandas as pd
 from vxdetector.interact_bowtie2 import mapbowtie2, buildbowtie2  # noqa: E402
 from vxdetector.interact_bedtools import overlap  # noqa: E402
 import vxdetector.Output_counter as Output_counter  # noqa: E402
