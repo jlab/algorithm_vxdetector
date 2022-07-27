@@ -6,7 +6,10 @@ import io
 import os
 import sys
 
-import_path = '$CONDA/lib/python*/site-packages/'
+version = '.'.join([str(sys.version_info[0]),
+                    str(sys.version_info[1])])
+import_path = f'$CONDA/lib/python{version}/site-packages/'
+print(import_path)
 sys.path.append(import_path)
 import_path = f'{__file__.rsplit("/", 2)[0]}/'
 sys.path.append(import_path)
