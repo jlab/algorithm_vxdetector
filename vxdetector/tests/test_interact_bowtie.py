@@ -18,6 +18,8 @@ read2_file = f'{path}test_data/5011_S225_L001_R2_001.fastq.gz'
 test_unpaired = f'{path}test_data/unpaired/unpaired.sam'
 test_paired = f'{path}test_data/paired/paired.bed'
 samtools_path = shutil.which('samtools')
+if samtools_path is None:
+    samtools_path = '$CONDA/bin/samtools'
 
 
 class test_mapbowtie2(unittest.TestCase):
@@ -57,11 +59,9 @@ class test_mapbowtie2(unittest.TestCase):
         os.system(f'{samtools_path} view {temp_path}unpaired.bam '
                   f'> {temp_path}unpaired.sam')
         output = []
-        print(os.path.exists(f'{temp_path}unpaired.sam'))
         with open(f'{temp_path}unpaired.sam') as f:
             for line in f:
                 output.append(line.strip().split())
-                print(line.strip().split())
         self.assertEqual(output, content)
         paired = True
         content = []
