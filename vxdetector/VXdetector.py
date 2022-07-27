@@ -10,7 +10,7 @@ sys.path.append(os.path.dirname(SCRIPT_DIR))
 import_path = '$CONDA/lib/python3.9/site-packages/'
 sys.path.append(import_path)
 
-import pandas as pd # noqa: E402
+import pandas as pd  # noqa: E402
 from vxdetector.interact_bowtie2 import mapbowtie2, buildbowtie2  # noqa: E402
 from vxdetector.interact_bedtools import overlap  # noqa: E402
 import vxdetector.Output_counter as Output_counter  # noqa: E402
