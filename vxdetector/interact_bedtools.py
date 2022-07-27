@@ -4,6 +4,8 @@ import os
 import shutil
 
 bedtools_path = shutil.which('bedtools')
+if bedtools_path is None:
+    bedtools_path = '$CONDA/bin/bedtools'
 # finds where bedtools is installed
 
 

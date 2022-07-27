@@ -4,8 +4,14 @@ import os
 import shutil
 
 bowtie2_path = shutil.which('bowtie2')
+if bowtie2_path is None:
+    bowtie2_path = '$CONDA/bin/bowtie2'
 samtools_path = shutil.which('samtools')
+if samtools_path is None:
+    samtools_path = '$CONDA/bin/samtools'
 bedtools_path = shutil.which('bedtools')
+if bedtools_path is None:
+    bedtools_path = '$CONDA/bin/bedtools'
 # finds where bowtie2, samtools and bedtools
 # are installed
 
