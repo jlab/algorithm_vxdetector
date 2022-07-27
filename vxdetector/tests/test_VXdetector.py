@@ -7,11 +7,10 @@ import os
 import sys
 
 os.system('ls -a $CONDA/')
-os.system('ls -a $CONDA/bin/python3.9')
-os.system('ls -a $CONDA/pkgs/')
+os.system('ls -a $CONDA/bin/python3.9/')
 version = '.'.join([str(sys.version_info[0]),
                     str(sys.version_info[1])])
-import_path = '$CONDA/pkgs/'
+import_path = '$CONDA/bin/python3.9/site-packages/'
 sys.path.append(import_path)
 import_path = f'{__file__.rsplit("/", 2)[0]}/'
 sys.path.append(import_path)
