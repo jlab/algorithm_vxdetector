@@ -36,7 +36,7 @@ def buildbowtie2(path):
         # only builds an index for the alignment if there isn't already one
         pass
     else:
-        os.system(f'{bowtie2_path}-build -f {input_ref} {output_path}')
+        os.system(f'{bowtie2_path}-build -f {input_ref} {output_path} > /dev/null')
         # if a indexfile is missing a new index is build
 
 

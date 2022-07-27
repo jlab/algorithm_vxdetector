@@ -6,14 +6,12 @@ import io
 import os
 import sys
 
-import_path = '$CONDA/bin/'
+import_path = '$CONDA/lib/python*/site-packages/'
 sys.path.append(import_path)
-
-import pandas as pd  # noqa: E402
-
 import_path = f'{__file__.rsplit("/", 2)[0]}/'
 sys.path.append(import_path)
 
+import pandas as pd  # noqa: E402
 import VXdetector as vx  # noqa: E402
 import shutil  # noqa: E402
 
