@@ -12,7 +12,7 @@ sys.path.append(import_path)
 import interact_bowtie2 as ibo  # noqa: E402
 import shutil  # noqa: E402
 
-import_path = f'{__file__.rsplit("/", 3)[0]}/'
+import_path = '$CONDA/bin/'
 sys.path.append(import_path)
 path = f'{os.path.dirname(__file__)}/'
 fasta_file = f'{path}test_data/5011_S225_L001_R1_001.fastq.gz'
