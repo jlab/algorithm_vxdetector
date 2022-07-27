@@ -7,7 +7,7 @@ import sys
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
-import_path = '$CONDA/lib/python3.9/site-packages/'
+import_path = '$CONDA/lib/python3.9/site-packages/pandas/'
 sys.path.append(import_path)
 
 import pandas as pd  # noqa: E402
