@@ -7,7 +7,7 @@ import os
 import sys
 
 os.system('ls -a $CONDA/')
-os.system('ls -a $CONDA/bin/python3.9/')
+os.system('ls -a $CONDA/bin/')
 version = '.'.join([str(sys.version_info[0]),
                     str(sys.version_info[1])])
 import_path = '$CONDA/bin/python3.9/site-packages/'
