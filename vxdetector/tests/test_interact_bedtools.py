@@ -11,7 +11,8 @@ sys.path.append(import_path)
 import interact_bedtools as ibe  # noqa: E402
 import shutil  # noqa: E402
 
-
+import_path = f'{__file__.rsplit("/", 3)[0]}/'
+sys.path.append(import_path)
 path = f'{__file__.rsplit("/", 3)[0]}/'
 test_paired = f'{os.path.dirname(__file__)}/test_data/paired/BED.bed'
 test_paired_no = f'{os.path.dirname(__file__)}/test_data/paired/noOver.bed'

@@ -6,7 +6,7 @@ import io
 import os
 import sys
 
-import_path = f'{__file__.rsplit("/", 2)[0]}/'
+import_path = f'{__file__.rsplit("/", 3)[0]}/'
 sys.path.append(import_path)
 
 import pandas as pd  # noqa: E402
