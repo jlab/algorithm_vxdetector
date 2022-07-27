@@ -3,10 +3,13 @@
 import unittest
 import tempfile
 import io
-import pandas as pd
 import os
 import sys
 
+import_path = f'{__file__.rsplit("/", 2)[0]}/'
+sys.path.append(import_path)
+
+import pandas as pd  # noqa: E402
 
 import_path = f'{__file__.rsplit("/", 2)[0]}/'
 sys.path.append(import_path)
