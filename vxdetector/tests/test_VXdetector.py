@@ -8,7 +8,7 @@ import sys
 
 version = '.'.join([str(sys.version_info[0]),
                     str(sys.version_info[1])])
-import_path = f'$CONDA/lib/python{version}/site-packages/'
+import_path = f'$CONDA/lib/python{version}/site-packages/pandas'
 print(import_path)
 sys.path.append(import_path)
 import_path = f'{__file__.rsplit("/", 2)[0]}/'
