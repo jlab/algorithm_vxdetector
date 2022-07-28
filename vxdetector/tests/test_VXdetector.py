@@ -2,7 +2,6 @@
 
 import unittest
 import tempfile
-# import subprocess
 import io
 import os
 import sys
@@ -119,21 +118,6 @@ class test_do_statistic(unittest.TestCase):
 
 
 class test_workflow(unittest.TestCase):
-    def test_no_fastq(self):
-        with self.assertRaises(ValueError) as cm:
-            vx.workflow(f'{path}test_data/Indexed_bt2', sys.stdout, False)
-        self.assertEqual('There were no FASTQ files in this directory',
-                         str(cm.exception))
-
-    def test_Error(self):
-        with self.assertRaises(ValueError) as cm:
-            vx.workflow(f'{path}test_data/Output_test.csv', sys.stdout, False)
-        self.assertEqual('This file does not look like a fastq file',
-                         str(cm.exception))
-
-
-'''
-class test_total(unittest.TestCase):
     def setUp(self):
         self.fp_tmpdir = tempfile.mkdtemp()
 
@@ -144,9 +128,7 @@ class test_total(unittest.TestCase):
         expected = f'{path}test_data/Output_test.csv'
         actual = f'{self.fp_tmpdir}/singleFile_test.csv'
         test_file = f'{path}test_data/5011_S225_L001_R1_001.fastq.gz'
-        program_path = (f'{os.path.dirname(os.path.dirname(path))}/'
-                        'VXdetector.py')
-        subprocess.run(['python', program_path, test_file, '-o', actual])
+        vx.workflow(test_file, actual, False)
         content = []
         with open(expected)as f:
             for line in f:
@@ -161,9 +143,7 @@ class test_total(unittest.TestCase):
         expected = f'{path}test_data/dir_test.csv'
         actual = f'{self.fp_tmpdir}/singleFile_test.csv'
         test_file = f'{path}test_data/test_dir/'
-        program_path = (f'{os.path.dirname(os.path.dirname(path))}/'
-                        'VXdetector.py')
-        subprocess.run(['python', program_path, test_file, '-o', actual])
+        vx.workflow(test_file, actual, False)
         content = []
         with open(expected)as f:
             for line in f:
@@ -173,7 +153,19 @@ class test_total(unittest.TestCase):
             for line in f:
                 output.append(line.strip().split())
         self.assertEqual(output, content)
-'''
+
+    def test_no_fastq(self):
+        with self.assertRaises(ValueError) as cm:
+            vx.workflow(f'{path}test_data/Indexed_bt2', sys.stdout, False)
+        self.assertEqual('There were no FASTQ files in this directory',
+                         str(cm.exception))
+
+    def test_Error(self):
+        with self.assertRaises(ValueError) as cm:
+            vx.workflow(f'{path}test_data/Output_test.csv', sys.stdout, False)
+        self.assertEqual('This file does not look like a fastq file',
+                         str(cm.exception))
+
 
 if __name__ == '__main__':
     unittest.main()
