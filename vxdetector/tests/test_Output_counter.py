@@ -128,7 +128,3 @@ class test_create_row(unittest.TestCase):
         self.assertEqual(f'It seems {no_log_path}bowtie2.log is missing. '
                          'Check if you deleted the temp_dir',
                          str(cm.exception))
-
-
-if __name__ == '__main__':
-    unittest.main()

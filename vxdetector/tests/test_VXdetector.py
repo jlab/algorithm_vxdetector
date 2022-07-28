@@ -5,6 +5,7 @@ import tempfile
 import io
 import os
 import sys
+from glob import glob
 
 
 sys.path.append('$CONDA/lib/python3.9/site-packages')
@@ -113,6 +114,12 @@ class test_do_statistic(unittest.TestCase):
         expected = pd.read_csv(f'{path}test_data/expected.csv', index_col=0)
         result = pd.read_csv(f'{path}test_data/result.csv', index_col=0)
         statistic = vx.do_statistic(result).round(5)
+        self.assertTrue(statistic.equals(expected))
+        expected = pd.read_csv(f'{path}test_data/expected_unpaired.csv',
+                               index_col=0)
+        result = pd.read_csv(f'{path}test_data/result_unpaired.csv',
+                             index_col=0)
+        statistic = vx.do_statistic(result).round(5)
         statistic.to_csv(f'{path}test_data/statistic1.csv')
         self.assertTrue(statistic.equals(expected))
 
@@ -122,6 +129,12 @@ class test_workflow(unittest.TestCase):
         self.fp_tmpdir = tempfile.mkdtemp()
 
     def tearDown(self):
+        if os.path.exists(f'{__file__.rsplit("/", 3)[0]}/'
+                          'Output/test_data.csv'):
+            os.remove(f'{__file__.rsplit("/", 3)[0]}/Output/test_data.csv')
+        file_list = glob(f'{__file__.rsplit("/", 3)[0]}/Indexed_bt2/*.bt2')
+        for file in file_list:
+            os.remove(file)
         shutil.rmtree(self.fp_tmpdir)
 
     def test_singleFile(self):
@@ -141,7 +154,7 @@ class test_workflow(unittest.TestCase):
 
     def test_directory(self):
         expected = f'{path}test_data/dir_test.csv'
-        actual = f'{self.fp_tmpdir}/singleFile_test.csv'
+        actual = f'{path}/test_data/dir_test_actual.csv'
         test_file = f'{path}test_data/test_dir/'
         vx.workflow(test_file, actual, False)
         content = []
@@ -150,6 +163,21 @@ class test_workflow(unittest.TestCase):
                 content.append(line.strip().split())
         output = []
         with open(actual)as f:
+            for line in f:
+                output.append(line.strip().split())
+        self.assertEqual(output, content)
+
+    def test_c_option(self):
+        expected = f'{path}test_data/Output_test.csv'
+        actual = sys.stdout
+        test_file = f'{path}test_data/5011_S225_L001_R1_001.fastq.gz'
+        vx.workflow(test_file, actual, True)
+        content = []
+        with open(expected)as f:
+            for line in f:
+                content.append(line.strip().split())
+        output = []
+        with open(f'{__file__.rsplit("/", 3)[0]}/Output/test_data.csv')as f:
             for line in f:
                 output.append(line.strip().split())
         self.assertEqual(output, content)
@@ -166,6 +194,14 @@ class test_workflow(unittest.TestCase):
         self.assertEqual('This file does not look like a fastq file',
                          str(cm.exception))
 
-
-if __name__ == '__main__':
-    unittest.main()
+    def test_raise(self):
+        with self.assertRaises(ValueError) as cm:
+            vx.workflow(f'{path}test_data/test_dir/no_qual_test.fastq',
+                        sys.stdout, False)
+        self.assertEqual('This file has no Reads of the required '
+                         'mapping-quality', str(cm.exception))
+        with self.assertRaises(ValueError) as cm:
+            vx.workflow(f'{path}test_data/test_dir/no_qual_'
+                        'paired_R1_001.fastq', sys.stdout, False)
+        self.assertEqual('This file has no Reads of the required '
+                         'mapping-quality', str(cm.exception))

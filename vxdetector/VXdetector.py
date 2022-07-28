@@ -164,12 +164,14 @@ def workflow(file_dir, new_file, write_csv):
             # raises error if given file is not a fastq file
         if paired is True and Output_counter.rawincount(f'{temp_path}'
                                                         'paired.bed') == 0:
+            files_manager.tmp_dir(path, temp_path)
             raise ValueError('This file has no Reads of the required '
                              'mapping-quality')
         overlap(path, temp_path, aligned_path)
         # look which reads intersect with which variable Region
         if paired is False and Output_counter.rawincount(f'{temp_path}'
                                                          'BED.bed') == 0:
+            files_manager.tmp_dir(path, temp_path)
             raise ValueError('This file has no Reads of the required '
                              'mapping-quality')
         file_name = file_name.rsplit('.f', 1)[0]
@@ -215,8 +217,8 @@ def workflow(file_dir, new_file, write_csv):
     # writes ouput eiher to STDOUT or to a file specified
     # via the -o option
     if write_csv is True:
-        new_file = f'{path}Output/\
-                    {os.path.basename(os.path.dirname(file_dir))}.csv'
+        new_file = (f'{path}Output/'
+                    f'{os.path.basename(os.path.dirname(file_dir))}.csv')
         do_output(result, new_file, single_file)
         # writes csv file to the standard output folder
 

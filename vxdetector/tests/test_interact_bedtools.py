@@ -60,7 +60,3 @@ class test_overlap(unittest.TestCase):
             for line in f:
                 output.append(line.strip().split())
         self.assertEqual(output, content)
-
-
-if __name__ == '__main__':
-    unittest.main()

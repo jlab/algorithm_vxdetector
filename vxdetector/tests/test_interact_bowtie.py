@@ -109,7 +109,3 @@ class test_buildbowtie2(unittest.TestCase):
         ibo.buildbowtie2(f'{path}test_data/')
         self.assertEqual(os.path.exists(f'{path}test_data/Indexed_bt2'
                                         '/bowtie2.1.bt2'), True)
-
-
-if __name__ == '__main__':
-    unittest.main()
