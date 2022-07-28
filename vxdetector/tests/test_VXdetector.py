@@ -2,6 +2,7 @@
 
 import unittest
 import tempfile
+import subprocess
 import io
 import os
 import sys
@@ -144,7 +145,7 @@ class test_total(unittest.TestCase):
         test_file = f'{path}test_data/5011_S225_L001_R1_001.fastq.gz'
         program_path = (f'{os.path.dirname(os.path.dirname(path))}/'
                         'VXdetector.py')
-        os.system(f'python {program_path} {test_file} -o {actual}')
+        subprocess.run(['python', program_path, test_file, '-o', actual])
         content = []
         with open(expected)as f:
             for line in f:
@@ -161,7 +162,7 @@ class test_total(unittest.TestCase):
         test_file = f'{path}test_data/test_dir/'
         program_path = (f'{os.path.dirname(os.path.dirname(path))}/'
                         'VXdetector.py')
-        os.system(f'python {program_path} {test_file} -o {actual}')
+        subprocess.run(['python', program_path, test_file, '-o', actual])
         content = []
         with open(expected)as f:
             for line in f:
