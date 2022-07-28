@@ -88,6 +88,14 @@ class test_mapbowtie2(unittest.TestCase):
                                              path, self.fp_tmpdir, paired)
         self.assertEqual(Error, True)
 
+    def test_no_index(self):
+        no_index_path = f'{self.fp_tmpdir}/'
+        with self.assertRaises(FileNotFoundError) as cm:
+            ibo.mapbowtie2(fasta_file, read2_file, no_index_path,
+                           self.fp_tmpdir, False)
+        self.assertEqual(f'No Index files found under "{no_index_path}'
+                         'Indexed_bt2/bowtie2"', str(cm.exception))
+
 
 class test_buildbowtie2(unittest.TestCase):
     def tearDown(self):

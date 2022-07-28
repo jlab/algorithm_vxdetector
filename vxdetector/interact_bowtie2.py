@@ -84,7 +84,7 @@ def mapbowtie2(fasta_file, read2_file, path, temp_path, paired):
     '''
     index_path = f'{path}Indexed_bt2/bowtie2'
     if os.path.exists(f'{index_path}.1.bt2') is False:
-        raise Exception(f'No Index files found under "{index_path}"')
+        raise FileNotFoundError(f'No Index files found under "{index_path}"')
         # raises an Exception if the Index files cannot be found
     log_path = f'{temp_path}bowtie2.log'
     bed_logpath = f'{temp_path}bed.log'

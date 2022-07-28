@@ -58,12 +58,5 @@ class test_get_lib(unittest.TestCase):
                          '"85_otus_aligned.fasta" file is missing.',
                          str(cm.exception))
         open(f'{self.fp_tmpdir}Indexed_bt2/85_otus_aligned.fasta', 'w').close()
-        try:
-            fm.get_lib(program_path=self.fp_tmpdir)
-        except FileNotFoundError:
-            self.fail('get_lib() raised FileNotFoundError unexpectedly')
+        fm.get_lib(program_path=self.fp_tmpdir)
         self.assertTrue(os.path.exists(f'{self.fp_tmpdir}Output/'))
-
-
-if __name__ == '__main__':
-    unittest.main()

@@ -56,6 +56,42 @@ class test_region_count(unittest.TestCase):
         new_row = oc.region_count(test_data, paired, new_row, regions)
         self.assertEqual(new_row, row)
 
+    def test_aligned_to_no_v(self):
+        test_data = f'{data_path}Indexed_bt2/'
+        row = {'Number of Reads': 64421,
+               'Unaligned Reads [%]': 4.019999999999996,
+               'Not properly paired': 'not paired',
+               'Sequenced variable region': 'No variable Region',
+               'V1': 0.0, 'V2': 0.0,
+               'V3': 0.0, 'V4': 0.0, 'V5': 0.0,
+               'V6': 0.0, 'V7': 0.0, 'V8': 0.0, 'V9': 0.0,
+               'Not aligned to a variable region': 95.98}
+        paired = False
+        new_row = {'Number of Reads': 64421,
+                   'Unaligned Reads [%]': 4.019999999999996}
+        regions = {'V1': 0, 'V2': 0, 'V3': 0, 'V4': 0, 'V5': 0,
+                   'V6': 0, 'V7': 0, 'V8': 0, 'V9': 0}
+        new_row = oc.region_count(test_data, paired, new_row, regions)
+        self.assertEqual(new_row, row)
+
+    def test_no_aligned(self):
+        test_data = f'{data_path}unpaired/'
+        row = {'Number of Reads': 64421,
+               'Unaligned Reads [%]': 100,
+               'Not properly paired': 'not paired',
+               'Sequenced variable region': 'No variable Region',
+               'V1': 0.0, 'V2': 0.0,
+               'V3': 0.0, 'V4': 0.0, 'V5': 0.0,
+               'V6': 0.0, 'V7': 0.0, 'V8': 0.0, 'V9': 0.0,
+               'Not aligned to a variable region': 0.0}
+        paired = False
+        new_row = {'Number of Reads': 64421,
+                   'Unaligned Reads [%]': 100}
+        regions = {'V1': 0, 'V2': 0, 'V3': 0, 'V4': 0, 'V5': 0,
+                   'V6': 0, 'V7': 0, 'V8': 0, 'V9': 0}
+        new_row = oc.region_count(test_data, paired, new_row, regions)
+        self.assertEqual(new_row, row)
+
 
 class test_create_row(unittest.TestCase):
     def test_return_value(self):
@@ -84,6 +120,12 @@ class test_create_row(unittest.TestCase):
         with self.assertRaises(FileNotFoundError) as cm:
             oc.create_row(data_path, paired=False)
         self.assertEqual(f'It seems {data_path}BED.bed is missing. '
+                         'Check if you deleted the temp_dir',
+                         str(cm.exception))
+        no_log_path = f'{data_path}Indexed_bt2/'
+        with self.assertRaises(FileNotFoundError) as cm:
+            oc.create_row(no_log_path, paired=False)
+        self.assertEqual(f'It seems {no_log_path}bowtie2.log is missing. '
                          'Check if you deleted the temp_dir',
                          str(cm.exception))
 

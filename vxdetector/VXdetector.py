@@ -162,8 +162,16 @@ def workflow(file_dir, new_file, write_csv):
             files_manager.tmp_dir(path, temp_path)
             raise ValueError('This file does not look like a fastq file')
             # raises error if given file is not a fastq file
+        if paired is True and Output_counter.rawincount(f'{temp_path}'
+                                                        'paired.bed') == 0:
+            raise ValueError('This file has no Reads of the required '
+                             'mapping-quality')
         overlap(path, temp_path, aligned_path)
         # look which reads intersect with which variable Region
+        if paired is False and Output_counter.rawincount(f'{temp_path}'
+                                                         'BED.bed') == 0:
+            raise ValueError('This file has no Reads of the required '
+                             'mapping-quality')
         file_name = file_name.rsplit('.f', 1)[0]
         file_name = file_name.replace('_R1_001', '')
         # reformats filename for easy viewing
@@ -187,8 +195,14 @@ def workflow(file_dir, new_file, write_csv):
             # 16S database.
             if Error is True:
                 continue
+            if paired is True and Output_counter.rawincount(f'{temp_path}'
+                                                            'paired.bed') == 0:
+                continue
             overlap(path, temp_path, aligned_path)
             # look which reads intersect with which variable Region
+            if paired is False and Output_counter.rawincount(f'{temp_path}'
+                                                             'BED.bed') == 0:
+                continue
             file_name = file_name.rsplit('.f', 1)[0]
             file_name = file_name.replace('_R1_001', '')
             # reformats filename for easy viewing

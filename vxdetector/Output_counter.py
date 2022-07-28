@@ -81,14 +81,13 @@ def region_count(temp_path, paired, new_row, regions):
     # counts the number of reads not mapped to any variable region
     aligned_count = 100 - new_row['Unaligned Reads [%]']
     var_re_count = sum(regions.values())
-    for region in regions:
-        regions[region] = (regions[region] / var_re_count) * aligned_count
-    # Calculates the percantage of reads mapped to either a specific
-    # region or no region
-    if aligned_count == 0 or (regions['Not aligned to a variable region']
-                              / aligned_count) == 1:
+    if aligned_count == 0:
         new_row['Sequenced variable region'] = 'No variable Region'
     else:
+        for region in regions:
+            regions[region] = (regions[region] / var_re_count) * aligned_count
+        # Calculates the percantage of reads mapped to either a specific
+        # region or no region
         most_probable_V = [x.replace('V', '') for x in
                            regions if ((regions[x] / aligned_count) * 100) > 20
                            and x.startswith('V')]
