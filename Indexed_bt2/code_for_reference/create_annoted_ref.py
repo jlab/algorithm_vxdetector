@@ -7,7 +7,7 @@
 from os import path as p
 
 
-def write(seq_chrom, annoted_ref, region):
+def write_reference_file(seq_chrom, annoted_ref, region):
     with open(annoted_ref, 'a') as t:
         if 'V1_start' in region:
             for counter, key in enumerate(region):
@@ -22,6 +22,27 @@ def write(seq_chrom, annoted_ref, region):
 
 
 def index(line, region):
+    r'''Statistical analysis of given directory
+
+    This function 
+
+    Parameters
+    ----------
+    line: str
+        String of a line from the efrence file
+        declared in main with "file".
+
+    region: dict
+        Empty dictionary.
+
+    Returns
+    -------
+    region: dict
+        Dictionary conataining region start / end as
+        keys and the position in the refrence file
+        declared in main with "file".
+
+    '''
     boundary = {'V1_start': 189, 'V1_end': 471,
                 'V2_start': 485, 'V2_end': 1867,
                 'V3_start': 1915, 'V3_end': 2231,
@@ -58,6 +79,13 @@ def index(line, region):
 
 
 def main():
+    r'''Statistical analysis of given directory
+
+    This program is used to create a reference file
+    containing the positions of 16S variable regions for
+    VXdetector.
+
+    '''
     file_ = f'{p.dirname(p.dirname(__file__))}/85_otus_aligned.fasta'
     annoted_ref = f'{p.dirname(p.dirname(__file__))}/annoted_ref.bed'
     with open(file_, 'r') as f:
@@ -68,7 +96,7 @@ def main():
                 seq_chrom = seq_chrom.strip('\n')
             else:
                 region = index(line, region)
-                write(seq_chrom, annoted_ref, region)
+                write_reference_file(seq_chrom, annoted_ref, region)
 
 
 if __name__ == '__main__':

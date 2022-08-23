@@ -12,6 +12,7 @@ classifiers = [
     'Programming Language :: Python',
     'Programming Language :: Python :: 3',
     'Programming Language :: Python :: 3.9',
+    'Programming Language :: Python :: 9.3',
     'Operating System :: Unix',
     'Operating System :: POSIX',
     'Operating System :: MacOS :: MacOS X',
