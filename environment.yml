@@ -8,6 +8,6 @@ dependencies:
   - nose
   - coverage >= 6  # to ensure lcov option is available
   - pandas
-  - samtools==1.11
+  - samtools
   - bedtools
   - bowtie2

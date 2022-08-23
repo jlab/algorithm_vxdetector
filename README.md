@@ -17,4 +17,3 @@ Requirements:
     bowtie2
     samtools
     bedtools
-    Module: pandas
