@@ -241,11 +241,11 @@ def main():
                               'multiple fastq or fasta files.'))
     parser.add_argument('-o', '--output', dest='output_file',
                         default=sys.stdout,
-                        help='User can specify a file format in which the output \
-                        is written in the Output folder.')
+                        help='User can specify a file format in which the \
+                        output is written in the Output folder.')
     parser.add_argument('-c', '--csv', dest='write_csv', action='store_true',
-                        help='If set the output will be written in a .csv file \
-                        in the Output folder')
+                        help='If set the output will be written in a \
+                       .csv file in the Output folder')
     args = parser.parse_args()
     # allows terminal input
     workflow(args.dir_path, args.output_file, args.write_csv)

@@ -8,6 +8,27 @@ from os import path as p
 
 
 def write_reference_file(seq_chrom, annoted_ref, region):
+    r'''Reference file writer
+
+    This function uses the dictionary created by index and
+    writes a file containing the start and end position of
+    each variable region for each entry in the MSA refrence.
+
+    Parameters
+    ----------
+    seq_chrom: str
+        Name of the entry
+
+    annoted_ref: str
+        Filepath where the created Refrence file should
+        be saved to.
+
+    region: dict
+        Dictionary conataining region start / end as
+        keys and the position in the refrence file
+        declared in main with "file".
+
+    '''
     with open(annoted_ref, 'a') as t:
         if 'V1_start' in region:
             for counter, key in enumerate(region):
@@ -22,9 +43,11 @@ def write_reference_file(seq_chrom, annoted_ref, region):
 
 
 def index(line, region):
-    r'''Statistical analysis of given directory
+    r'''Variable region position finder
 
-    This function 
+    This function searches for the positions of
+    the 16S variable regions within a line from
+    the MSA refrence file via deleting the gaps.
 
     Parameters
     ----------
