@@ -82,10 +82,14 @@ def region_count(temp_path, paired, new_row, regions):
     aligned_count = 100 - new_row['Unaligned Reads [%]']
     var_re_count = sum(regions.values())
     if aligned_count == 0:
-        new_row['Sequenced variable region'] = 'No variable Region'
+        new_row['Sequenced variable region'] = 'Not 16S'
     else:
         for region in regions:
-            regions[region] = (regions[region] / var_re_count) * aligned_count
+            if var_re_count == 0:
+                pass
+            else:
+                regions[region] = (regions[region] / var_re_count) \
+                                  * aligned_count
         # Calculates the percantage of reads mapped to either a specific
         # region or no region
         most_probable_V = [x.replace('V', '') for x in
@@ -93,7 +97,10 @@ def region_count(temp_path, paired, new_row, regions):
                            and x.startswith('V')]
         new_row['Sequenced variable region'] = 'V' + ''.join(most_probable_V)
         if new_row['Sequenced variable region'] == 'V':
-            new_row['Sequenced variable region'] = 'No variable Region'
+            if regions['Not aligned to a variable region'] > 0:
+                new_row['Sequenced variable region'] = 'No variable Region'
+            else:
+                new_row['Sequenced variable region'] = 'Not 16S'
     # finds the variable regions with the highest probability
     # any region having a percentage of 20% or higher will be listed.
     # The percentage is calculated within the regions.

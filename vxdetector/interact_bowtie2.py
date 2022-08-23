@@ -93,7 +93,7 @@ def mapbowtie2(fasta_file, read2_file, path, temp_path, paired):
     if paired is True:
         aligned_path = f'{temp_path}paired.bed'
         cmd = f'{bowtie2_path} -x {index_path} -1 {fasta_file} -2 {read2_file} \
-                --fast 2> {log_path} | {samtools_path} view -b -q 25 -S -F 4 \
+                --fast 2> {log_path} | {samtools_path} view -b -q 30 -S -F 4 \
                 | {bedtools_path} bamtobed -bedpe -i stdin > {aligned_path} \
                 2> {bed_logpath}'
         # Should a backward read be found both files will be given to bowtie2.
@@ -102,7 +102,7 @@ def mapbowtie2(fasta_file, read2_file, path, temp_path, paired):
     else:
         aligned_path = f'{temp_path}unpaired.bam'
         cmd = f'{bowtie2_path} -x {index_path} -q -U {fasta_file} \
-                 --fast 2> {log_path} | {samtools_path} view -b -q 25 -S -F 4 \
+                 --fast 2> {log_path} | {samtools_path} view -b -q 30 -S -F 4 \
                  -o {aligned_path}'
         # Should no backward read be found it will just use the forward
         # read and does an alignment followed by a pipe to convert

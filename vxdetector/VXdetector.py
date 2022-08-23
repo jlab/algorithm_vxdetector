@@ -4,10 +4,11 @@ import argparse
 import glob
 import os
 import sys
+import time
 
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(os.path.dirname(SCRIPT_DIR))
-sys.path.append('$CONDA/lib/python3.9/site-packages')
+# SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+# sys.path.append(os.path.dirname(SCRIPT_DIR))
+# sys.path.append('$CONDA/lib/python3.9/site-packages')
 
 import pandas as pd  # noqa: E402
 from vxdetector.interact_bowtie2 import mapbowtie2, buildbowtie2  # noqa: E402
@@ -197,14 +198,8 @@ def workflow(file_dir, new_file, write_csv):
             # 16S database.
             if Error is True:
                 continue
-            if paired is True and Output_counter.rawincount(f'{temp_path}'
-                                                            'paired.bed') == 0:
-                continue
             overlap(path, temp_path, aligned_path)
             # look which reads intersect with which variable Region
-            if paired is False and Output_counter.rawincount(f'{temp_path}'
-                                                             'BED.bed') == 0:
-                continue
             file_name = file_name.rsplit('.f', 1)[0]
             file_name = file_name.replace('_R1_001', '')
             # reformats filename for easy viewing
@@ -256,4 +251,8 @@ def main():
 
 
 if __name__ == '__main__':
+    start_time = time.time()
     main()
+    print("--- %s seconds ---" % (time.time() - start_time))
+    with open('/homes/jgroos/Desktop/Output/time.txt', 'a') as f:
+        f.write("\n --- %s seconds ---" % (time.time() - start_time))
