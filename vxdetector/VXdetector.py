@@ -4,17 +4,11 @@ import argparse
 import glob
 import os
 import sys
-import time
-
-# SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-# sys.path.append(os.path.dirname(SCRIPT_DIR))
-# sys.path.append('$CONDA/lib/python3.9/site-packages')
-
-import pandas as pd  # noqa: E402
-from vxdetector.interact_bowtie2 import mapbowtie2, buildbowtie2  # noqa: E402
-from vxdetector.interact_bedtools import overlap  # noqa: E402
-import vxdetector.Output_counter as Output_counter  # noqa: E402
-import vxdetector.files_manager as files_manager  # noqa: E402
+import pandas as pd
+import vxdetector.Output_counter as Output_counter
+import vxdetector.files_manager as files_manager
+from vxdetector.interact_bowtie2 import mapbowtie2, buildbowtie2
+from vxdetector.interact_bedtools import overlap
 
 
 def do_statistic(result):
@@ -252,8 +246,4 @@ def main():
 
 
 if __name__ == '__main__':
-    start_time = time.time()
     main()
-    print("--- %s seconds ---" % (time.time() - start_time))
-    with open('/homes/jgroos/Desktop/Output/time.txt', 'a') as f:
-        f.write("\n --- %s seconds ---" % (time.time() - start_time))

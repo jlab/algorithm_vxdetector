@@ -3,20 +3,16 @@
 import unittest
 import tempfile
 import os
-import sys
 from glob import glob
-
-import_path = f'{__file__.rsplit("/", 2)[0]}/'
-sys.path.append(import_path)
-
-import interact_bowtie2 as ibo  # noqa: E402
-import shutil  # noqa: E402
+import vxdetector.interact_bowtie2 as ibo
+import shutil
 
 path = f'{os.path.dirname(__file__)}/'
 fasta_file = f'{path}test_data/5011_S225_L001_R1_001.fastq.gz'
 read2_file = f'{path}test_data/5011_S225_L001_R2_001.fastq.gz'
 test_unpaired = f'{path}test_data/unpaired/unpaired.sam'
 test_paired = f'{path}test_data/paired/paired.bed'
+
 samtools_path = shutil.which('samtools')
 if samtools_path is None:
     samtools_path = '$CONDA/bin/samtools'

@@ -4,12 +4,7 @@ import unittest
 import os
 import tempfile
 import shutil
-import sys
-
-import_path = f'{__file__.rsplit("/", 2)[0]}/'
-sys.path.append(import_path)
-
-import files_manager as fm  # noqa: E402
+import vxdetector.files_manager as fm
 
 
 class test_tmp_dir(unittest.TestCase):

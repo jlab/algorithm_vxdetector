@@ -3,13 +3,8 @@
 import unittest
 import tempfile
 import os
-import sys
-
-import_path = f'{__file__.rsplit("/", 2)[0]}/'
-sys.path.append(import_path)
-
-import interact_bedtools as ibe  # noqa: E402
-import shutil  # noqa: E402
+import vxdetector.interact_bedtools as ibe
+import shutil
 
 path = f'{__file__.rsplit("/", 3)[0]}/'
 test_paired = f'{os.path.dirname(__file__)}/test_data/paired/BED.bed'

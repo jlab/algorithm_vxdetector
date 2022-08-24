@@ -2,12 +2,7 @@
 
 import unittest
 import os
-import sys
-
-import_path = f'{__file__.rsplit("/", 2)[0]}/'
-sys.path.append(import_path)
-
-import Output_counter as oc  # noqa: E402
+import vxdetector.Output_counter as oc
 
 
 data_path = f'{os.path.dirname(__file__)}/test_data/'
@@ -79,7 +74,7 @@ class test_region_count(unittest.TestCase):
         row = {'Number of Reads': 64421,
                'Unaligned Reads [%]': 100,
                'Not properly paired': 'not paired',
-               'Sequenced variable region': 'No variable Region',
+               'Sequenced variable region': 'Not 16S',
                'V1': 0.0, 'V2': 0.0,
                'V3': 0.0, 'V4': 0.0, 'V5': 0.0,
                'V6': 0.0, 'V7': 0.0, 'V8': 0.0, 'V9': 0.0,
@@ -106,13 +101,15 @@ class test_create_row(unittest.TestCase):
         new_row = oc.create_row(test_data, paired=False)
         self.assertEqual(new_row, row)
         test_data = f'{data_path}paired/'
-        row = {'Not aligned to a variable region': 0.014914649681528664,
-               'Not properly paired': 'not paired', 'Number of Reads': 64421,
-               'Sequenced variable region': 'V45',
-               'Unaligned Reads [%]': 12.189999999999998, 'V1': 0.0,
-               'V2': 0.0, 'V3': 0.0, 'V4': 48.9871668789809,
-               'V5': 38.800461146496815, 'V6': 0.007457324840764332,
-               'V7': 0.0, 'V8': 0.0, 'V9': 0.0}
+        row = {'Number of Reads': 64421,
+               'Unaligned Reads [%]': 12.189999999999998,
+               'Not properly paired': 'not paired',
+               'Sequenced variable region': 'V45', 'V1': 0.0,
+               'V2': 0.0, 'V3': 0.0, 'V4': 45.375854271356786,
+               'V5': 42.3973743718593, 'V6': 0.0122571189279732,
+               'V7': 0.0, 'V8': 0.0, 'V9': 0.0,
+               'Not aligned to a variable region': 0.0245142378559464}
+
         new_row = oc.create_row(test_data, paired=False)
         self.assertEqual(new_row, row)
 

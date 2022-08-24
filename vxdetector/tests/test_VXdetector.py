@@ -6,29 +6,22 @@ import io
 import os
 import sys
 from glob import glob
-
-
-sys.path.append('$CONDA/lib/python3.9/site-packages')
-
-import pandas as pd  # noqa: E402
-
-sys.path.append(f'{__file__.rsplit("/", 2)[0]}/')
-
-import VXdetector as vx  # noqa: E402
-import shutil  # noqa: E402
+import pandas as pd
+import vxdetector.VXdetector as vx
+import shutil
 
 path = f'{os.path.dirname(__file__)}/'
 output_test = f'{path}test_data/Output_test.csv'
 result = {'5011_S225_L001': {'Number of Reads': 64421,
                              'Unaligned Reads [%]': 12.189999999999998,
-                             'Not properly paired': 0.005588239859673088,
+                             'Not properly paired': 0.004843141211716676,
                              'Sequenced variable region': 'V45', 'V1': 0.0,
-                             'V2': 0.0, 'V3': 0.0, 'V4': 48.9871668789809,
-                             'V5': 38.800461146496815,
-                             'V6': 0.007457324840764332,
+                             'V2': 0.0, 'V3': 0.0, 'V4': 45.375854271356786,
+                             'V5': 42.3973743718593,
+                             'V6': 0.0122571189279732,
                              'V7': 0.0, 'V8': 0.0, 'V9': 0.0,
                              'Not aligned to a variable region':
-                             0.014914649681528664}}
+                             0.0245142378559464}}
 
 
 class test_do_output(unittest.TestCase):
@@ -53,19 +46,20 @@ class test_do_output(unittest.TestCase):
         self.assertEqual(output, content)
 
     def test_numeric_conversion(self):
-        mixed_result = {'5011_S225_L001': {'Number of Reads': '64421',
+        mixed_result = {'5011_S225_L001': {'Not aligned to a variable region':
+                                           0.0245142378559464,
+                                           'Number of Reads': '64421',
                                            'Unaligned Reads [%]':
                                            '12.189999999999998',
+                                           'V7': 0.0, 'V8': 0.0, 'V9': 0.0,
                                            'Not properly paired':
-                                           0.005588239859673088,
+                                           0.004843141211716676,
                                            'Sequenced variable region':
                                            'V45', 'V1': 0.0, 'V2': 0.0,
-                                           'V3': 0.0, 'V4': '48.9871668789809',
-                                           'V5': 38.800461146496815,
-                                           'V6': 0.007457324840764332,
-                                           'V7': 0.0, 'V8': 0.0, 'V9': 0.0,
-                                           'Not aligned to a variable region':
-                                           0.014914649681528664}}
+                                           'V3': 0.0, 'V4': 45.375854271356786,
+                                           'V5': '42.3973743718593',
+                                           'V6': 0.0122571189279732,
+                                           }}
         single_file = True
         new_file = f'{self.fp_tmpdir}test3.csv'
         vx.do_output(mixed_result, new_file, single_file)
@@ -84,9 +78,9 @@ class test_do_output(unittest.TestCase):
                     'paired,Sequenced variable region,V1,V2,V3,V4,V5,V6,'
                     'V7,V8,V9,Not aligned to a variable region\n'
                     '5011_S225_L001,64421,12.189999999999998,'
-                    '0.005588239859673088,V45,0.0,0.0,0.0,48.9871668789809,'
-                    '38.800461146496815,0.007457324840764332,0.0,0.0,0.0'
-                    ',0.014914649681528664\n')
+                    '0.004843141211716676,V45,0.0,0.0,0.0,45.375854271356786,'
+                    '42.3973743718593,0.0122571189279732,0.0,0.0,0.0'
+                    ',0.0245142378559464\n')
         capturedOutput = io.StringIO()
         sys.stdout = capturedOutput
         new_file = sys.stdout
@@ -100,6 +94,12 @@ class test_do_output(unittest.TestCase):
 
 
 class test_do_statistic(unittest.TestCase):
+    def setUp(self):
+        self.fp_tmpdir = tempfile.mkdtemp()
+
+    def tearDown(self):
+        shutil.rmtree(self.fp_tmpdir)
+
     def test_order(self):
         result = pd.read_csv(f'{path}test_data/mixed.csv', index_col=0)
         columns = ''.join(['Number of Reads',
@@ -120,7 +120,7 @@ class test_do_statistic(unittest.TestCase):
         result = pd.read_csv(f'{path}test_data/result_unpaired.csv',
                              index_col=0)
         statistic = vx.do_statistic(result).round(5)
-        statistic.to_csv(f'{path}test_data/statistic1.csv')
+        statistic.to_csv(f'{self.fp_tmpdir}/statistic1.csv')
         self.assertTrue(statistic.equals(expected))
 
 
@@ -133,9 +133,14 @@ class test_workflow(unittest.TestCase):
                           'Output/test_data.csv'):
             os.remove(f'{__file__.rsplit("/", 3)[0]}/Output/test_data.csv')
         file_list = glob(f'{__file__.rsplit("/", 3)[0]}/Indexed_bt2/*.bt2')
+        directory_list = glob(f'{__file__.rsplit("/", 3)[0]}/tmp_files_*')
+        if os.path.exists(f'{path}test_data/dir_test_actual.csv'):
+            file_list.append(f'{path}test_data/dir_test_actual.csv')
         for file in file_list:
             os.remove(file)
         shutil.rmtree(self.fp_tmpdir)
+        for directory in directory_list:
+            shutil.rmtree(directory)
 
     def test_singleFile(self):
         expected = f'{path}test_data/Output_test.csv'
