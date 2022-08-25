@@ -9,10 +9,9 @@ import vxdetector.files_manager as fm
 
 class test_tmp_dir(unittest.TestCase):
     def test_basic_function(self):
-        path = os.path.dirname(__file__)
-        temp_path = fm.tmp_dir(path, temp_path='')
+        temp_path = fm.tmp_dir(None, temp_path='')
         self.assertTrue(os.path.exists(temp_path))
-        fm.tmp_dir(path, temp_path)
+        fm.tmp_dir(None, temp_path)
         self.assertFalse(os.path.exists(temp_path))
 
 
@@ -26,9 +25,6 @@ class test_get_lib(unittest.TestCase):
     def test_program_path(self):
         program_path = fm.get_lib()
         self.assertTrue(os.path.exists(program_path))
-        self.assertTrue(os.path.exists(f'{program_path}/vxdetector/'))
-        self.assertTrue(os.path.exists(f'{program_path}/vxdetector/'
-                                       'VXdetector.py'))
 
     def test_raise_exceptions_get_lib(self):
         with self.assertRaises(FileNotFoundError) as cm:
