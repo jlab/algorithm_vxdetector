@@ -1,2 +1,3 @@
 .coverage
 coverage.lcov
+bowtie2.*.bt2
