@@ -5,12 +5,12 @@ import os
 import vxdetector.Output_counter as oc
 
 
-data_path = f'{os.path.dirname(__file__)}/test_data/'
-
-
 class test_rawincount(unittest.TestCase):
+    def setUp(self):
+        self.data_path = f'{os.path.dirname(__file__)}/test_data/'
+
     def test_counting(self):
-        count = oc.rawincount(f'{data_path}5011_S225_L001_R2_001.fastq.gz')
+        count = oc.rawincount(f'{self.data_path}5011_S225_L001_R2_001.fastq.gz')
         self.assertEqual(count, 39324)
 
     def test_raise(self):
@@ -23,8 +23,11 @@ class test_rawincount(unittest.TestCase):
 
 
 class test_region_count(unittest.TestCase):
+    def setUp(self):
+        self.data_path = f'{os.path.dirname(__file__)}/test_data/'
+
     def test_new_row(self):
-        test_data = f'{data_path}unpaired/'
+        test_data = f'{self.data_path}unpaired/'
         row = {'Number of Reads': 64421,
                'Unaligned Reads [%]': 4.019999999999996,
                'Not properly paired': 'not paired',
@@ -39,7 +42,7 @@ class test_region_count(unittest.TestCase):
                    'V6': 0, 'V7': 0, 'V8': 0, 'V9': 0}
         new_row = oc.region_count(test_data, paired, new_row, regions)
         self.assertEqual(new_row, row)
-        test_data = f'{data_path}paired/'
+        test_data = f'{self.data_path}paired/'
         row = {'Number of Reads': 64421,
                'Unaligned Reads [%]': 4.019999999999996,
                'Not properly paired': 0.005588239859673088,
@@ -52,7 +55,7 @@ class test_region_count(unittest.TestCase):
         self.assertEqual(new_row, row)
 
     def test_aligned_to_no_v(self):
-        test_data = f'{data_path}Indexed_bt2/'
+        test_data = f'{self.data_path}Indexed_bt2/'
         row = {'Number of Reads': 64421,
                'Unaligned Reads [%]': 4.019999999999996,
                'Not properly paired': 'not paired',
@@ -70,7 +73,7 @@ class test_region_count(unittest.TestCase):
         self.assertEqual(new_row, row)
 
     def test_no_aligned(self):
-        test_data = f'{data_path}unpaired/'
+        test_data = f'{self.data_path}unpaired/'
         row = {'Number of Reads': 64421,
                'Unaligned Reads [%]': 100,
                'Not properly paired': 'not paired',
@@ -89,8 +92,11 @@ class test_region_count(unittest.TestCase):
 
 
 class test_create_row(unittest.TestCase):
+    def setUp(self):
+        self.data_path = f'{os.path.dirname(__file__)}/test_data/'
+
     def test_return_value(self):
-        test_data = f'{data_path}unpaired/'
+        test_data = f'{self.data_path}unpaired/'
         row = {'Not aligned to a variable region': 0.0,
                'Not properly paired': 'not paired', 'Number of Reads': 64421,
                'Sequenced variable region': 'V45',
@@ -100,7 +106,7 @@ class test_create_row(unittest.TestCase):
                'V8': 0.0, 'V9': 0.0}
         new_row = oc.create_row(test_data, paired=False)
         self.assertEqual(new_row, row)
-        test_data = f'{data_path}paired/'
+        test_data = f'{self.data_path}paired/'
         row = {'Number of Reads': 64421,
                'Unaligned Reads [%]': 12.189999999999998,
                'Not properly paired': 'not paired',
@@ -115,11 +121,11 @@ class test_create_row(unittest.TestCase):
 
     def test_raise(self):
         with self.assertRaises(FileNotFoundError) as cm:
-            oc.create_row(data_path, paired=False)
-        self.assertEqual(f'It seems {data_path}BED.bed is missing. '
+            oc.create_row(self.data_path, paired=False)
+        self.assertEqual(f'It seems {self.data_path}BED.bed is missing. '
                          'Check if you deleted the temp_dir',
                          str(cm.exception))
-        no_log_path = f'{data_path}Indexed_bt2/'
+        no_log_path = f'{self.data_path}Indexed_bt2/'
         with self.assertRaises(FileNotFoundError) as cm:
             oc.create_row(no_log_path, paired=False)
         self.assertEqual(f'It seems {no_log_path}bowtie2.log is missing. '
