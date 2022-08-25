@@ -25,9 +25,6 @@ class test_get_lib(unittest.TestCase):
     def test_program_path(self):
         program_path = fm.get_lib()
         self.assertTrue(os.path.exists(program_path))
-        self.assertTrue(os.path.exists(f'{program_path}/vxdetector/'))
-        self.assertTrue(os.path.exists(f'{program_path}/vxdetector/'
-                                       'VXdetector.py'))
 
     def test_raise_exceptions_get_lib(self):
         with self.assertRaises(FileNotFoundError) as cm:
