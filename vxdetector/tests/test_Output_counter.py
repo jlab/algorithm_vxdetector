@@ -10,7 +10,8 @@ class test_rawincount(unittest.TestCase):
         self.data_path = f'{os.path.dirname(__file__)}/test_data/'
 
     def test_counting(self):
-        count = oc.rawincount(f'{self.data_path}5011_S225_L001_R2_001.fastq.gz')
+        count = oc.rawincount(f'{self.data_path}'
+                              '5011_S225_L001_R2_001.fastq.gz')
         self.assertEqual(count, 39324)
 
     def test_raise(self):
