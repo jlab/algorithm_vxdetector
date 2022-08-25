@@ -35,7 +35,7 @@ class test_mapbowtie2(unittest.TestCase):
         self.assertEqual(aligned_path, f'{temp_path}unpaired.bam')
         self.assertEqual(Error, False)
         paired = True
-        aligned_path, Error = ibo.mapbowtie2(fasta_file, read2_file,
+        aligned_path, Error = ibo.mapbowtie2(self.fasta_file, self.read2_file,
                                              path, temp_path, paired)
         self.assertEqual(aligned_path, f'{temp_path}paired.bed')
         self.assertEqual(Error, False)
