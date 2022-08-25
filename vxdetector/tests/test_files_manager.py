@@ -9,10 +9,9 @@ import vxdetector.files_manager as fm
 
 class test_tmp_dir(unittest.TestCase):
     def test_basic_function(self):
-        path = os.path.dirname(__file__)
-        temp_path = fm.tmp_dir(path, temp_path='')
+        temp_path = fm.tmp_dir(None, temp_path='')
         self.assertTrue(os.path.exists(temp_path))
-        fm.tmp_dir(path, temp_path)
+        fm.tmp_dir(None, temp_path)
         self.assertFalse(os.path.exists(temp_path))
 
 
