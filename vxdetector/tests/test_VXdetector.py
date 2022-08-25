@@ -91,7 +91,7 @@ class test_do_output(unittest.TestCase):
         sys.stdout = sys.__stdout__
         self.assertEqual(capturedOutput.getvalue(), expected)
         new_file = f'{self.fp_tmpdir}test2.csv'
-        vx.do_output(result, new_file, single_file)
+        vx.do_output(self.result, new_file, single_file)
         self.assertTrue(os.path.exists(new_file))
 
 
