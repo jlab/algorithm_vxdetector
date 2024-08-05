@@ -10,7 +10,6 @@ import Output_counter as Output_counter
 import files_manager as files_manager
 from interact_bowtie2 import mapbowtie2, buildbowtie2
 from interact_bedtools import overlap
-import time
 from multiprocessing import pool
 import random
 
