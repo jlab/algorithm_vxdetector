@@ -13,17 +13,18 @@ from interact_bedtools import overlap
 from multiprocessing import pool
 import random
 
-def sample_fastq(file_path, sample_size):
-    '''get random parts from the fq file'''
+def sample_fastq(file_path, sample_size, sampled_indices=None):
+    '''Get random parts from the FASTQ file based on shared indices for paired-end reads.'''
     sampled_reads = []
     with open(file_path, 'r') as f:
         lines = f.readlines()
         total_reads = len(lines) // 4
-        sampled_indices = sorted(random.sample(range(total_reads), sample_size))
+        if sampled_indices is None:
+            sampled_indices = sorted(random.sample(range(total_reads), sample_size))
         for idx in sampled_indices:
             read = lines[idx*4:(idx+1)*4]
             sampled_reads.extend(read)
-    return sampled_reads
+    return sampled_reads, sampled_indices
 
 def save_sampled_fastq(sampled_reads, output_path):
     '''Save sampled reads to a temporary FASTQ file'''
@@ -52,9 +53,14 @@ def do_statistic(result):
     return result
 
 def do_output(result, new_file, single_file):
-
+    
     warnings.simplefilter(action='ignore', category=FutureWarning)
     result = pd.DataFrame(result).T.sort_index()
+    
+    print("Available columns in result:", result.columns)
+    print(result.head())  # Zeigt die ersten Zeilen des DataFrames an
+
+    
     for column in result:
         result[column] = pd.to_numeric(result[column], errors='ignore')
     if single_file is False:
@@ -66,12 +72,16 @@ def do_output(result, new_file, single_file):
     result.to_csv(new_file, index=True)
 
 def workflow(file_dir, new_file, write_csv, sample_size):
-    
     path = files_manager.get_lib()
     temp_path = files_manager.tmp_dir(path, temp_path=None)
     paired = False
+    single_file = False
     result = dict()
     buildbowtie2(path)
+
+    if not os.path.exists(file_dir):
+        raise ValueError(f"The provided path {file_dir} does not exist.")
+    
     if glob.glob(f'{file_dir}**/*.fastq*', recursive=True) == [] and os.path.isdir(file_dir):
         files_manager.tmp_dir(path, temp_path)
         raise ValueError('There were no FASTQ files in this directory')
@@ -81,10 +91,20 @@ def workflow(file_dir, new_file, write_csv, sample_size):
         read2_file = os.path.join(os.path.dirname(file_dir), file_name.replace('_R1_', '_R2_'))
         if '_R1_' in file_name and os.path.exists(read2_file):
             paired = True
-        sampled_reads = sample_fastq(file_dir, sample_size)
-        temp_fastq = os.path.join(temp_path, 'sampled.fastq')
-        save_sampled_fastq(sampled_reads, temp_fastq)
-        aligned_path, Error = mapbowtie2(temp_fastq, read2_file, path, temp_path, paired)
+        # Sample reads from the forward file (R1) and use the same indices for the reverse file (R2)
+        sampled_reads_R1, sampled_indices = sample_fastq(file_dir, sample_size)
+        sampled_reads_R2, _ = sample_fastq(read2_file, sample_size, sampled_indices)
+        
+        # Save sampled reads for both R1 and R2
+        temp_fastq_R1 = os.path.join(temp_path, 'sampled_R1.fastq')
+        temp_fastq_R2 = os.path.join(temp_path, 'sampled_R2.fastq')
+        save_sampled_fastq(sampled_reads_R1, temp_fastq_R1)
+        save_sampled_fastq(sampled_reads_R2, temp_fastq_R2)
+
+        aligned_path, Error = mapbowtie2(temp_fastq_R1, temp_fastq_R2, path, temp_path, paired)
+
+        print(f"Mapping result: {aligned_path}, Error: {Error}")
+        
         if Error is True:
             files_manager.tmp_dir(path, temp_path)
             raise ValueError('This file does not look like a fastq file')
@@ -98,6 +118,9 @@ def workflow(file_dir, new_file, write_csv, sample_size):
         file_name = file_name.rsplit('.f', 1)[0]
         file_name = file_name.replace('_R1_001', '')
         result[file_name] = Output_counter.create_row(temp_path, paired)
+        
+        print(f"Output for {file_name}: {result[file_name]}")
+        
     elif os.path.isdir(file_dir):
         single_file = False
         total_files = len(glob.glob(f'{file_dir}**/*.fastq*', recursive=True))
@@ -111,21 +134,37 @@ def workflow(file_dir, new_file, write_csv, sample_size):
             read2_file = os.path.join(os.path.dirname(fq_file), file_name.replace('_R1_', '_R2_'))
             if '_R1_' in file_name and os.path.exists(read2_file):
                 paired = True
-            sampled_reads = sample_fastq(fq_file, sample_size)
-            temp_fastq = os.path.join(temp_path, 'sampled.fastq')
-            save_sampled_fastq(sampled_reads, temp_fastq)
-            aligned_path, Error = mapbowtie2(temp_fastq, read2_file, path, temp_path, paired)
+
+            # Sample reads from R1 and use the same indices for R2
+            sampled_reads_R1, sampled_indices = sample_fastq(fq_file, sample_size)
+            sampled_reads_R2, _ = sample_fastq(read2_file, sample_size, sampled_indices)
+            
+            temp_fastq_R1 = os.path.join(temp_path, 'sampled_R1.fastq')
+            temp_fastq_R2 = os.path.join(temp_path, 'sampled_R2.fastq')
+            save_sampled_fastq(sampled_reads_R1, temp_fastq_R1)
+            save_sampled_fastq(sampled_reads_R2, temp_fastq_R2)
+
+            aligned_path, Error = mapbowtie2(temp_fastq_R1, temp_fastq_R2, path, temp_path, paired)
             if Error is True:
                 continue
             overlap(path, temp_path, aligned_path)
+
+            print(f"Overlap completed for {aligned_path}")
+            
             file_name = file_name.rsplit('.f', 1)[0]
             file_name = file_name.replace('_R1_001', '')
             result[file_name] = Output_counter.create_row(temp_path, paired)
+            
+            print(f"Output for {file_name}: {result[file_name]}")
+
+    print("Result content before do_output:", result)
+    
     files_manager.tmp_dir(path, temp_path)
     do_output(result, new_file, single_file)
     if write_csv is True:
         new_file = (f'{path}Output/{os.path.basename(os.path.dirname(file_dir))}.csv')
         do_output(result, new_file, single_file)
+        
 
 def main():
     parser = argparse.ArgumentParser(prog='VX detector', description=(
