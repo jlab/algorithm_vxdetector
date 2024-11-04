@@ -1,9 +1,0 @@
-sh: /bin/bowtie2-build: No such file or directory
-Traceback (most recent call last):
-  File "/Users/jeremy/Desktop/VX/algorithm_vxdetector/vxdetector/VXdetector.py", line 144, in <module>
-    main()
-  File "/Users/jeremy/Desktop/VX/algorithm_vxdetector/vxdetector/VXdetector.py", line 141, in main
-    workflow(args.dir_path, args.output_file, args.write_csv, args.sample_size)
-  File "/Users/jeremy/Desktop/VX/algorithm_vxdetector/vxdetector/VXdetector.py", line 77, in workflow
-    raise ValueError('There were no FASTQ files in this directory')
-ValueError: There were no FASTQ files in this directory
