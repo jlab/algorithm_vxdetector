@@ -53,7 +53,7 @@ def mapbowtie2(fasta_file, read2_file, path, temp_path, paired, bowtie2_params=N
 
         # Run the Bowtie2, Samtools, and Bedtools pipeline
         with open(log_path, 'w') as log_file, open(bed_logpath, 'w') as bed_log, open(aligned_path, 'w') as output_file:
-            print(bowtie2_base_cmd, "Schlumpf")
+            
             bowtie_process = subprocess.Popen(bowtie2_base_cmd, stderr=log_file, stdout=subprocess.PIPE)
             samtools_process = subprocess.Popen(cmd_samtools, stdin=bowtie_process.stdout, stdout=subprocess.PIPE)
             subprocess.run(cmd_bedtools, stdin=samtools_process.stdout, stdout=output_file, stderr=bed_log)
