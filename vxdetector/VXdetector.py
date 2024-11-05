@@ -11,13 +11,20 @@ import files_manager as files_manager
 from interact_bowtie2 import mapbowtie2, buildbowtie2
 from interact_bedtools import overlap
 import random
+import gzip
 
 def sample_fastq(file_path, sample_size, sampled_indices=None):
     '''Get random parts from the FASTQ file based on shared indices for paired-end reads.'''
     sampled_reads = []  # List to hold sampled reads
-    with open(file_path, 'r') as f:
+    # Check if the file is gzip compressed and choose the appropriate open function
+    open_func = gzip.open if file_path.endswith('.gz') else open
+
+    with open_func(file_path, 'rt') as f:  # Open in text mode ('rt') to read lines
         lines = f.readlines()
         total_reads = len(lines) // 4  # FASTQ files store 4 lines per read
+        # Adjust sample_size if it's greater than total_reads
+        if sample_size > total_reads:
+            sample_size = total_reads
         if sampled_indices is None:
             # If no indices are provided, sample randomly from the total reads
             sampled_indices = sorted(random.sample(range(total_reads), sample_size))
@@ -29,7 +36,9 @@ def sample_fastq(file_path, sample_size, sampled_indices=None):
 
 def save_sampled_fastq(sampled_reads, output_path):
     '''Save sampled reads to a temporary FASTQ file.'''
-    with open(output_path, 'w') as f:
+    open_func = gzip.open if output_path.endswith('.gz') else open  # Use gzip if output is .gz
+
+    with open_func(output_path, 'wt') as f:  # Write in text mode ('wt')
         f.writelines(sampled_reads)
 
 def do_statistic(result):
@@ -75,7 +84,7 @@ def workflow(file_dir, new_file, write_csv, sample_size, bowtie2_params):
     '''Main workflow for processing FASTQ files and performing sequence alignment.'''
     path = files_manager.get_lib()  # Get the main working directory
     temp_path = files_manager.tmp_dir(path, temp_path=None)  # Create a temporary directory
-    paired = False  # To check if the input is paired-end
+    paired = False  # Initially assume single-end
     single_file = False  # To check if processing a single file
     result = dict()  # Dictionary to store results from different files
     buildbowtie2(path)  # Build the Bowtie2 index
@@ -93,22 +102,28 @@ def workflow(file_dir, new_file, write_csv, sample_size, bowtie2_params):
     if os.path.isfile(file_dir):
         single_file = True
         file_name = os.path.basename(file_dir)
-        read2_file = os.path.join(os.path.dirname(file_dir), file_name.replace('_R1_', '_R2_'))  # Get the paired file if exists
+        read2_file = os.path.join(os.path.dirname(file_dir), file_name.replace('_R1_', '_R2_'))  # Expected paired file
+
+        # Check if paired-end data is available
         if '_R1_' in file_name and os.path.exists(read2_file):
             paired = True  # Mark as paired if both R1 and R2 files exist
 
-        # Sample reads from R1 and R2 with same indices
+        # Sample reads from R1 (and R2 if paired) with the same indices
         sampled_reads_R1, sampled_indices = sample_fastq(file_dir, sample_size)
-        sampled_reads_R2, _ = sample_fastq(read2_file, sample_size, sampled_indices)
+        if paired:
+            sampled_reads_R2, _ = sample_fastq(read2_file, sample_size, sampled_indices)
+        else:
+            sampled_reads_R2 = None  # No R2 file present, set R2 reads as None
 
         # Save sampled reads to temporary files
         temp_fastq_R1 = os.path.join(temp_path, 'sampled_R1.fastq')
-        temp_fastq_R2 = os.path.join(temp_path, 'sampled_R2.fastq')
         save_sampled_fastq(sampled_reads_R1, temp_fastq_R1)
-        save_sampled_fastq(sampled_reads_R2, temp_fastq_R2)
+        if paired:
+            temp_fastq_R2 = os.path.join(temp_path, 'sampled_R2.fastq')
+            save_sampled_fastq(sampled_reads_R2, temp_fastq_R2)
 
         # Run Bowtie2 alignment
-        aligned_path, Error = mapbowtie2(temp_fastq_R1, temp_fastq_R2, path, temp_path, paired, bowtie2_params)
+        aligned_path, Error = mapbowtie2(temp_fastq_R1, temp_fastq_R2 if paired else None, path, temp_path, paired, bowtie2_params)
 
         if Error is True:
             files_manager.tmp_dir(path, temp_path)
@@ -119,7 +134,7 @@ def workflow(file_dir, new_file, write_csv, sample_size, bowtie2_params):
         
         # Perform overlap analysis using Bedtools
         overlap(path, temp_path, aligned_path)
-        if paired is False and Output_counter.rawincount(f'{temp_path}BED.bed') == 0:
+        if not paired and Output_counter.rawincount(f'{temp_path}BED.bed') == 0:
             files_manager.tmp_dir(path, temp_path)
             raise ValueError('This file has no Reads of the required mapping-quality')
 
@@ -144,18 +159,19 @@ def workflow(file_dir, new_file, write_csv, sample_size, bowtie2_params):
             if '_R1_' in file_name and os.path.exists(read2_file):
                 paired = True  # Mark as paired if both R1 and R2 files exist
 
-            # Sample reads from R1 and R2 with same indices
+            # Sample reads from R1 (and R2 if paired) with same indices
             sampled_reads_R1, sampled_indices = sample_fastq(fq_file, sample_size)
-            sampled_reads_R2, _ = sample_fastq(read2_file, sample_size, sampled_indices)
+            sampled_reads_R2 = sample_fastq(read2_file, sample_size, sampled_indices)[0] if paired else None
             
             # Save sampled reads to temporary files
             temp_fastq_R1 = os.path.join(temp_path, 'sampled_R1.fastq')
-            temp_fastq_R2 = os.path.join(temp_path, 'sampled_R2.fastq')
             save_sampled_fastq(sampled_reads_R1, temp_fastq_R1)
-            save_sampled_fastq(sampled_reads_R2, temp_fastq_R2)
+            if paired:
+                temp_fastq_R2 = os.path.join(temp_path, 'sampled_R2.fastq')
+                save_sampled_fastq(sampled_reads_R2, temp_fastq_R2)
 
             # Run Bowtie2 alignment
-            aligned_path, Error = mapbowtie2(temp_fastq_R1, temp_fastq_R2, path, temp_path, paired, bowtie2_params)
+            aligned_path, Error = mapbowtie2(temp_fastq_R1, temp_fastq_R2 if paired else None, path, temp_path, paired, bowtie2_params)
             if Error is True:
                 continue  # Skip if there's an error in processing the file
 
@@ -176,6 +192,7 @@ def workflow(file_dir, new_file, write_csv, sample_size, bowtie2_params):
         new_file = (f'{path}Output/{os.path.basename(os.path.dirname(file_dir))}.csv')
         do_output(result, new_file, single_file)
 
+
 def main():
     '''Main function to parse user arguments and initiate the workflow.'''
     parser = argparse.ArgumentParser(prog='VX detector', description=(
@@ -187,7 +204,7 @@ def main():
                         help='If set the output will be written in a .csv file in the Output folder')
     parser.add_argument('-s', '--sample_size', dest='sample_size', type=int, default=1000, 
                         help='Number of reads to sample from each FASTQ file')
-    parser.add_argument('-b','--bowtie2_params', dest='bowtie2_params', default="--threads 4,--fast",
+    parser.add_argument('-b','--bowtie2_params', dest='bowtie2_params', default='--threads 4, --fast',
                         help='Additional parameters to pass to Bowtie2')
     # Parse the user input arguments
     args = parser.parse_args()
