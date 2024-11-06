@@ -16,23 +16,36 @@ import gzip
 def sample_fastq(file_path, sample_size, sampled_indices=None):
     '''Get random parts from the FASTQ file based on shared indices for paired-end reads.'''
     sampled_reads = []  # List to hold sampled reads
-    # Check if the file is gzip compressed and choose the appropriate open function
     open_func = gzip.open if file_path.endswith('.gz') else open
 
-    with open_func(file_path, 'rt') as f:  # Open in text mode ('rt') to read lines
-        lines = f.readlines()
-        total_reads = len(lines) // 4  # FASTQ files store 4 lines per read
-        # Adjust sample_size if it's greater than total_reads
-        if sample_size > total_reads:
-            sample_size = total_reads
-        if sampled_indices is None:
-            # If no indices are provided, sample randomly from the total reads
-            sampled_indices = sorted(random.sample(range(total_reads), sample_size))
-        for idx in sampled_indices:
-            # Get the read (4 lines per read) and append to the sampled_reads list
-            read = lines[idx*4:(idx+1)*4]
-            sampled_reads.extend(read)
+    # Count total reads in the file by iterating line by line
+    with open_func(file_path, 'rt') as f:
+        total_reads = sum(1 for _ in f) // 4
+
+    # Adjust sample_size if it's greater than total_reads
+    if sample_size > total_reads:
+        sample_size = total_reads
+
+    if sampled_indices is None:
+        sampled_indices = sorted(random.sample(range(total_reads), sample_size))
+
+    with open_func(file_path, 'rt') as f:
+        read_idx = 0
+        read_buffer = []
+        for line in f:
+            read_buffer.append(line)
+            if len(read_buffer) == 4:  # Once we have a full read
+                if read_idx in sampled_indices:
+                    sampled_reads.extend(read_buffer)  # Add the read if it matches the sampled index
+                read_buffer = []  # Clear the buffer for the next read
+                read_idx += 1  # Move to the next read
+
+                # Stop if we've collected enough reads
+                if len(sampled_reads) >= sample_size * 4:
+                    break
+
     return sampled_reads, sampled_indices
+
 
 def save_sampled_fastq(sampled_reads, output_path):
     '''Save sampled reads to a temporary FASTQ file.'''
