@@ -17,12 +17,18 @@ import shutil
 
 
 def biom_to_fastq(biom_file, fastq_output):
-    '''Converts a BIOM file to FASTQ format by extracting sequences.'''
+    '''Converts a BIOM file to FASTQ format by extracting sequences and ensuring they are compatible with FASTQ standards.'''
     with open(fastq_output, "w") as f:
         table = biom.load_table(biom_file)  # Load the BIOM table
-        sequences = table.ids(axis='observation')  # Extract sequences (in the "#OTU ID" column)
-        for seq in sequences:
-            f.write(f"@{seq}\n{seq}\n+\n{'I' * len(seq)}\n")  # Write in FASTQ format
+        sequences = table.ids(axis='observation')  # Extract sequences
+        for seq_id in sequences:
+            # Truncate the sequence ID if it’s too long for Bowtie2's requirements
+            truncated_id = seq_id[:50]  # Cut the sequence ID to 50 characters (adjust if needed)
+            # Check and sanitize the sequence to avoid unwanted characters
+            sanitized_seq = ''.join(filter(str.isalpha, seq_id))  # Ensure only letters are in the sequence
+            f.write(f"@{truncated_id}\n{sanitized_seq}\n+\n{'I' * len(sanitized_seq)}\n")  # Write in FASTQ format
+    print(f"BIOM file successfully converted to FASTQ format at: {fastq_output}")
+
 
 def do_statistic(result):
     '''Performs statistical analysis on the DataFrame
@@ -104,39 +110,35 @@ def process_file(fq_file, path, bowtie2_params):
 
 def workflow(file_dir, new_file, write_csv, bowtie2_params):
     '''Main workflow for handling file directories, single files, or BIOM files.'''
-    path = files_manager.get_lib()  # Path to reference library
-    buildbowtie2(path)  # Build Bowtie2 index if necessary
+    path = files_manager.get_lib()  # Get the path to the reference library
+    buildbowtie2(path)  # Build the Bowtie2 index
 
     result = {}
     single_file = False
-    temp_fastq = None  # Placeholder for temporary FASTQ path if needed
+    temp_fastq = None  # Initialize variable to hold the temp FASTQ file path
 
-    # Determine input type: BIOM file, single FASTQ file, or directory
+    # Check if input is a BIOM file, single FASTQ file, or directory
     if file_dir.endswith('.biom'):
-        # Convert BIOM file to FASTQ for processing
+        # Convert BIOM to FASTQ
         temp_fastq = os.path.join(tempfile.gettempdir(), 'temp_sequences.fastq')
         biom_to_fastq(file_dir, temp_fastq)
         result = process_file(temp_fastq, path, bowtie2_params)
         single_file = True
     elif os.path.isfile(file_dir):
-        # Process single FASTQ file
         single_file = True
         result = process_file(file_dir, path, bowtie2_params)
     elif os.path.isdir(file_dir):
-        # Process all FASTQ files in a directory with multiprocessing
         fastq_files = glob.glob(f'{file_dir}/**/*.fastq*', recursive=True)
         with Pool() as pool:
-            # Use Pool to parallelize file processing
             results = pool.starmap(process_file, [(fq_file, path, bowtie2_params) for fq_file in fastq_files if '_R2_' not in fq_file])
         for res in results:
             if res:
-                # Update the result dictionary with data from each processed file
                 result.update(res)
 
-    # Write the result to output file
+    # Output the result
     do_output(result, new_file, single_file)
     
-    # Optionally write output as a CSV file in the Output folder
+    # If CSV output is requested, write to CSV file
     if write_csv:
         output_csv = (f'{path}Output/{os.path.basename(os.path.dirname(file_dir))}.csv')
         do_output(result, output_csv, single_file)
