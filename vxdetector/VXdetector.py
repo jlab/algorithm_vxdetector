@@ -14,8 +14,37 @@ import random
 import gzip
 
 
-def sample_fastq(file_path, sample_size, sampled_indices=None):
-    '''Get random parts from the FASTQ file based on shared indices for paired-end reads.'''
+def sample_fastq(file_path, sample_size, sampled_indices=None, seed=None):
+    #'''Get random parts from the FASTQ file based on shared indices for paired-end reads.'''
+    """Read a (gzipped) fastQ file and randomly (without replacement) select
+       a given number of reads.
+
+       Assumes that each reads comes in exactly four lines. To save memory and
+       have reasonable speed, we first pass through the file "just" to count
+       the total amount of lines (div by 4 gives the number of reads).
+       Then we randomly draw (without replacement) sample_size many numbers
+       between 0 and line-numbers (div by 4 to only target header lines) and sort
+       this list. Next, we read the file again and keep track of the line
+       number (ln). Whenever the line number matches the current random line
+       number, the file line and the three following are pushed to the
+       sampled_readlines array.
+
+       Parameters
+       ----------
+       file_path : str
+            File path of the fastQ (gzipped) file containing the reads.
+        sample_size : int
+            Number of random reads taken from the fastQ file.
+        sample_indices : ?
+            ??? Ask Jeremy
+        seed : int
+            Random generator seed.
+
+        Returns
+        -------
+        Tuple of list of random read lines and list of randomly selected line
+        numbers.
+     """
 
     def _count_generator(reader):
         b = reader(1024 * 1024)
@@ -42,12 +71,25 @@ def sample_fastq(file_path, sample_size, sampled_indices=None):
     # second pass: iterate through file with line counts
     # add next 4 lines to sampled_reads, iff linecount is in random selection
     sampled_readlines = []  # List to hold sampled reads
-    sel_reads = random.sample(range(int(number_lines / 4) + 1), sample_size)
+    if seed is not None:
+        random.seed(seed)
+    sel_reads = sorted(list(map(lambda x: x*4, random.sample(range(int(number_lines / 4) + 1), sample_size))))
     FH = _get_filehandle(file_path)
-    ln = 0
-    for ln, line in enumerate(FH):
-        if (ln // 4) in sel_reads:
+    ln = 0  # line number iterator
+    j = 0  # iterator through sorted, random header line numbers
+    while ln < number_lines:
+        line = FH.readline()
+        if ln == sel_reads[j]:
             sampled_readlines.append(str(line, encoding='utf-8'))
+            for i in range(3):
+                line = FH.readline()
+                sampled_readlines.append(str(line, encoding='utf-8'))
+                ln += 1
+            if j + 1 < len(sel_reads):
+                 j += 1
+            else:
+                break
+        ln += 1
     FH.close()
 
     return sampled_readlines, sel_reads
