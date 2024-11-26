@@ -18,7 +18,33 @@ import gzip
 import random
 
 def biom_to_fastq(biom_file, fastq_output):
-    '''Converts a BIOM file to FASTQ format by extracting sequences and ensuring they are compatible with FASTQ standards.'''
+    """
+    Converts a BIOM file into a FASTQ file.
+
+    This function reads a BIOM file, which is a binary JSON-like format often used in metagenomics to store 
+    sequence counts and metadata. It extracts sequence identifiers and sequences, and formats them into a 
+    FASTQ format. Each sequence is given a default quality score to make it compatible with downstream 
+    bioinformatics tools that require FASTQ files.
+
+    Parameters
+    ----------
+    biom_file : str
+        Path to the input BIOM file containing sequence data and associated metadata.
+    fastq_output : str
+        Path to the output FASTQ file where the converted sequences will be saved. Supports gzip compression 
+        if the filename ends with '.gz'.
+
+    Returns
+    -------
+    None
+        Writes the converted sequences to the specified FASTQ file.
+    
+    Notes
+    -----
+    - Ensure that the input BIOM file is properly formatted and includes sequence data.
+    - The FASTQ format generated assumes a fixed quality score, which may need adjustment based on downstream 
+      applications.
+    """
     with open(fastq_output, "w") as f:
         table = biom.load_table(biom_file)  # Load the BIOM table
         sequences = table.ids(axis='observation')  # Extract sequences
@@ -31,42 +57,111 @@ def biom_to_fastq(biom_file, fastq_output):
     print(f"BIOM file successfully converted to FASTQ format at: {fastq_output}")
 
 
-def sample_fastq(file_path, sample_size, sampled_indices=None):
-    '''Get random parts from the FASTQ file based on shared indices for paired-end reads.'''
-    sampled_reads = []  # List to hold sampled reads
-    open_func = gzip.open if file_path.endswith('.gz') else open
+def sample_fastq(file_path, sample_size, sampled_indices=None, seed=None):
+    """Read a (gzipped) fastQ file and randomly (without replacement) select
+       a given number of reads.
 
-    # Count total reads in the file by iterating line by line
-    with open_func(file_path, 'rt') as f:
-        total_reads = sum(1 for _ in f) // 4
+       Assumes that each reads comes in exactly four lines. To save memory and
+       have reasonable speed, we first pass through the file "just" to count
+       the total amount of lines (div by 4 gives the number of reads).
+       Then we randomly draw (without replacement) sample_size many numbers
+       between 0 and line-numbers (div by 4 to only target header lines) and sort
+       this list. Next, we read the file again and keep track of the line
+       number (ln). Whenever the line number matches the current random line
+       number, the file line and the three following are pushed to the
+       sampled_readlines array.
 
-    # Adjust sample_size if it's greater than total_reads
-    if sample_size > total_reads:
-        sample_size = total_reads
+       Parameters
+       ----------
+       file_path : str
+            File path of the fastQ (gzipped) file containing the reads.
+        sample_size : int
+            Number of random reads taken from the fastQ file.
+        sampled_indices : list of int, optional
+            Consistent sampling across paired end files
+        seed : int
+            Random generator seed.
 
-    if sampled_indices is None:
-        sampled_indices = sorted(random.sample(range(total_reads), sample_size))
+        Returns
+        -------
+        Tuple of list of random read lines and list of randomly selected line
+        numbers.
+     """
 
-    with open_func(file_path, 'rt') as f:
-        read_idx = 0
-        read_buffer = []
-        for line in f:
-            read_buffer.append(line)
-            if len(read_buffer) == 4:  # Once we have a full read
-                if read_idx in sampled_indices:
-                    sampled_reads.extend(read_buffer)  # Add the read if it matches the sampled index
-                read_buffer = []  # Clear the buffer for the next read
-                read_idx += 1  # Move to the next read
+    def _count_generator(reader):
+        b = reader(1024 * 1024)
+        while b:
+            yield b
+            b = reader(1024 * 1024)
 
-                # Stop if we've collected enough reads
-                if len(sampled_reads) >= sample_size * 4:
-                    break
+    def _get_filehandle(file_path):
+        # open file either plain or as gzip compressed file
+        FH = None
+        if file_path.endswith('.gz'):
+            FH = gzip.open(file_path, 'rb')
+        else:
+            FH = open(file_path, 'rb')
+        return FH
 
-    return sampled_reads, sampled_indices
+    # first pass: count number of lines in the file
+    FH = _get_filehandle(file_path)
+    c_generator = _count_generator(FH.read)
+    number_lines = sum(buffer.count(b'\n') for buffer in c_generator)
+    assert number_lines % 4 == 0, "file %s does not contain a multiple of 4 lines! %i" % (file_path, number_lines)
+    FH.close()
+
+    # second pass: iterate through file with line counts
+    # add next 4 lines to sampled_reads, iff linecount is in random selection
+    sampled_readlines = []  # List to hold sampled reads
+    if seed is not None:
+        random.seed(seed)
+    sel_reads = sorted(list(map(lambda x: x*4, random.sample(range(int(number_lines / 4) + 1), sample_size))))
+    FH = _get_filehandle(file_path)
+    ln = 0  # line number iterator
+    j = 0  # iterator through sorted, random header line numbers
+    while ln < number_lines:
+        line = FH.readline()
+        if ln == sel_reads[j]:
+            sampled_readlines.append(str(line, encoding='utf-8'))
+            for i in range(3):
+                line = FH.readline()
+                sampled_readlines.append(str(line, encoding='utf-8'))
+                ln += 1
+            if j + 1 < len(sel_reads):
+                 j += 1
+            else:
+                break
+        ln += 1
+    FH.close()
+
+    return sampled_readlines, sel_reads
 
 
 def save_sampled_fastq(sampled_reads, output_path):
-    '''Save sampled reads to a temporary FASTQ file.'''
+    """
+    Writes sampled sequencing reads into a FASTQ file.
+
+    The function accepts a list of sampled reads in FASTQ format and saves them to the specified output 
+    file. If the output file ends with '.gz', the file is automatically compressed using gzip. This function 
+    ensures that the sampled reads are stored efficiently for use in subsequent steps like alignment or 
+    analysis.
+
+    Parameters
+    ----------
+    sampled_reads : list of str
+        List of reads in FASTQ format, where each read consists of four lines:
+        - Line 1: Sequence identifier (e.g., @SEQ_ID).
+        - Line 2: Raw sequence.
+        - Line 3: Optional '+' separator.
+        - Line 4: Quality scores.
+    output_path : str
+        Path to the output file. If the file ends with '.gz', it will be written in a compressed format.
+
+    Returns
+    -------
+    None
+        Saves the sampled reads to the output file.
+    """
     open_func = gzip.open if output_path.endswith('.gz') else open  # Use gzip if output is .gz
 
     with open_func(output_path, 'wt') as f:  # Write in text mode ('wt')
@@ -74,13 +169,24 @@ def save_sampled_fastq(sampled_reads, output_path):
 
 
 def do_statistic(result):
-    '''Performs statistical analysis on the DataFrame
+    """
+    Performs statistical analysis on sequencing data.
 
-    Calculates the mean and standard deviation for all numeric columns
-    in the DataFrame, and determines the most common sequenced variable 
-    region. Adds these statistics to the DataFrame and returns the updated 
-    DataFrame.
-    '''
+    This function analyzes the results from processing FASTQ files, calculating metrics such as the mean and 
+    standard deviation for numeric columns in the data. It also identifies the most common variable region 
+    across sequences, appending these statistics as new columns in the DataFrame.
+
+    Parameters
+    ----------
+    result : pandas.DataFrame
+        DataFrame containing processed sequencing data. Expected columns include numeric metrics and 
+        categorical data such as variable regions.
+
+    Returns
+    -------
+    pandas.DataFrame
+        Updated DataFrame with additional columns for calculated statistics.
+    """
     average = result.mean(numeric_only=True).to_frame().T  # Calculate mean for numeric columns
     region = (result['Sequenced variable region'].mode().values)  # Find the most common variable region
     region = ' / '.join(str(r) for r in region)  # Format the result for better readability
@@ -101,11 +207,28 @@ def do_statistic(result):
 
 
 def do_output(result, new_file, single_file):
-    '''Writes the results into a CSV file
+    """
+    Writes processing results to a CSV file.
 
-    Converts the dictionary of results into a DataFrame, calculates statistics 
-    if working with multiple files, and writes the data into a CSV file.
-    '''
+    Converts sequencing results stored in a dictionary into a DataFrame, optionally calculates statistics, 
+    and writes the data to a CSV file for downstream analysis or record-keeping. If the results are from a 
+    single input file, no additional statistics are calculated.
+
+    Parameters
+    ----------
+    result : dict
+        Dictionary containing processing results, keyed by file name.
+    new_file : str
+        Path to the output CSV file where results will be saved.
+    single_file : bool
+        If True, skips statistical calculations as the results are from a single input file.
+
+    Returns
+    -------
+    None
+        Saves the results to the specified file.
+    """
+    
     warnings.simplefilter(action='ignore', category=FutureWarning)  # Ignore warnings about future behavior
     result = pd.DataFrame(result).T.sort_index()  # Convert the dictionary to a DataFrame and sort by index
     for column in result:
@@ -122,9 +245,30 @@ def do_output(result, new_file, single_file):
 
 def process_file(fq_file, path, bowtie2_params, sample_size=None):
     """
-    Processes a single FASTQ file, including optional read sampling, alignment with Bowtie2, 
-    and overlap analysis using Bedtools.
+    Processes an individual FASTQ file through sampling, alignment, and overlap analysis.
+
+    This function handles all steps for processing a single FASTQ file. It includes optional random sampling 
+    of reads to reduce data size, alignment to a reference genome using Bowtie2, and analysis of overlap 
+    regions using Bedtools.
+
+    Parameters
+    ----------
+    fq_file : str
+        Path to the input FASTQ file to process.
+    path : str
+        Path to the Bowtie2 library and index files.
+    bowtie2_params : str
+        Additional parameters for Bowtie2 alignment (e.g., "--fast --threads 4").
+    sample_size : int, optional
+        Number of reads to randomly sample. If None, the entire file is processed.
+
+    Returns
+    -------
+    dict or None
+        A dictionary with processing results, including file name and metrics. Returns None if an error 
+        occurs during processing.
     """
+    
     paired = False
     result = {}
     try:
@@ -160,9 +304,30 @@ def process_file(fq_file, path, bowtie2_params, sample_size=None):
 
 def workflow(file_dir, new_file, write_csv, sample_size, bowtie2_params):
     """
-    Manages the overall processing workflow, including directory traversal, BIOM file conversion, 
-    and multiprocessing for FASTQ file processing.
+    Executes the full workflow for processing sequencing data.
+
+    The workflow includes directory traversal, conversion of BIOM files to FASTQ format (if needed), and 
+    parallelized processing of FASTQ files. Results are aggregated and optionally written to a CSV file.
+
+    Parameters
+    ----------
+    file_dir : str
+        Path to the directory or file containing input sequencing data.
+    new_file : str
+        Path to the CSV file where results will be saved.
+    write_csv : bool
+        If True, writes the results to a CSV file.
+    sample_size : int
+        Number of reads to sample from each FASTQ file. If None, all reads are processed.
+    bowtie2_params : str
+        Additional parameters for Bowtie2 alignment.
+
+    Returns
+    -------
+    None
+        Executes the workflow and outputs results as specified.
     """
+    
     path = files_manager.get_lib()
     buildbowtie2(path)  # Prepare Bowtie2 library
     result = {}
@@ -188,7 +353,27 @@ def workflow(file_dir, new_file, write_csv, sample_size, bowtie2_params):
 
 
 def main():
-    '''Main function to parse user arguments and initiate the workflow.'''
+    """
+    Parses user input and initiates the workflow.
+
+    This function uses argparse to handle command-line arguments, passing them to the workflow function. 
+    It provides flexibility for customizing the input directory, Bowtie2 parameters, and output options.
+
+    Parameters
+    ----------
+    None
+
+    Returns
+    -------
+    None
+        Executes the script based on user-provided inputs.
+    
+    Notes
+    -----
+    - Command-line usage should follow the format specified in the argparse help message.
+    - Ensure all required dependencies (Bowtie2, Bedtools) are installed and accessible.
+    """
+    
     parser = argparse.ArgumentParser(prog='VX detector', description=(
         'This program tries to find which variable region of the 16S sequence was sequenced'))
     parser.add_argument('dir_path', help=('Directory path of the directory containing multiple fastq or fasta files.'))
