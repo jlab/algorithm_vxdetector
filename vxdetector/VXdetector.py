@@ -156,7 +156,7 @@ def save_sampled_fastq(sampled_reads, output_path):
 
     The function accepts a list of sampled reads in FASTQ format and
     saves them to the specified output file. If the output file ends
-    with '.gz', the file is automatically compressed using gzip. 
+    with '.gz', the file is automatically compressed using gzip.
     This function ensures that the sampled reads are stored efficiently
     for use in subsequent steps like alignment or analysis.
 
@@ -392,8 +392,10 @@ def workflow(file_dir, new_file, write_csv, sample_size, bowtie2_params):
     elif os.path.isdir(file_dir):  # Process directory of FASTQ files
         fastq_files = glob.glob(f'{file_dir}/**/*.fastq*', recursive=True)
         with Pool() as pool:
-            results = pool.starmap(process_file, [(fq_file, path, bowtie2_params, sample_size)
-                                                  for fq_file in fastq_files if '_R2_' not in fq_file])
+            results = pool.starmap(process_file, [(fq_file, path,
+                                                   bowtie2_params, sample_size)
+                                                  for fq_file in fastq_files
+                                                  if '_R2_' not in fq_file])
         for res in results:
             if res:
                 result.update(res)
