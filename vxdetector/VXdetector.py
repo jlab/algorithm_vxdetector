@@ -13,9 +13,9 @@ from interact_bedtools import overlap
 import tempfile
 from multiprocessing import Pool
 import biom
-import shutil
 import gzip
 import random
+
 
 def biom_to_fastq(biom_file, fastq_output):
     """
@@ -38,7 +38,7 @@ def biom_to_fastq(biom_file, fastq_output):
     -------
     None
         Writes the converted sequences to the specified FASTQ file.
-    
+
     Notes
     -----
     - Ensure that the input BIOM file is properly formatted and includes sequence data.
@@ -50,11 +50,15 @@ def biom_to_fastq(biom_file, fastq_output):
         sequences = table.ids(axis='observation')  # Extract sequences
         for seq_id in sequences:
             # Truncate the sequence ID if it’s too long for Bowtie2's requirements
-            truncated_id = seq_id[:50]  # Cut the sequence ID to 50 characters (adjust if needed)
+            # Cut the sequence ID to 50 characters (adjust if needed)
+            truncated_id = seq_id[:50]
             # Check and sanitize the sequence to avoid unwanted characters
-            sanitized_seq = ''.join(filter(str.isalpha, seq_id))  # Ensure only letters are in the sequence
-            f.write(f"@{truncated_id}\n{sanitized_seq}\n+\n{'I' * len(sanitized_seq)}\n")  # Write in FASTQ format
-    print(f"BIOM file successfully converted to FASTQ format at: {fastq_output}")
+            # Ensure only letters are in the sequence
+            sanitized_seq = ''.join(filter(str.isalpha, seq_id))
+            f.write(f"@{truncated_id}\n{sanitized_seq}\n+\n{'I' *
+                    len(sanitized_seq)}\n")  # Write in FASTQ format
+    print(f"BIOM file successfully converted to FASTQ format at: {
+          fastq_output}")
 
 
 def sample_fastq(file_path, sample_size, sampled_indices=None, seed=None):
@@ -107,7 +111,8 @@ def sample_fastq(file_path, sample_size, sampled_indices=None, seed=None):
     FH = _get_filehandle(file_path)
     c_generator = _count_generator(FH.read)
     number_lines = sum(buffer.count(b'\n') for buffer in c_generator)
-    assert number_lines % 4 == 0, "file %s does not contain a multiple of 4 lines! %i" % (file_path, number_lines)
+    assert number_lines % 4 == 0, "file %s does not contain a multiple of 4 lines! %i" % (
+        file_path, number_lines)
     FH.close()
 
     # second pass: iterate through file with line counts
@@ -115,7 +120,8 @@ def sample_fastq(file_path, sample_size, sampled_indices=None, seed=None):
     sampled_readlines = []  # List to hold sampled reads
     if seed is not None:
         random.seed(seed)
-    sel_reads = sorted(list(map(lambda x: x*4, random.sample(range(int(number_lines / 4) + 1), sample_size))))
+    sel_reads = sorted(list(
+        map(lambda x: x*4, random.sample(range(int(number_lines / 4) + 1), sample_size))))
     FH = _get_filehandle(file_path)
     ln = 0  # line number iterator
     j = 0  # iterator through sorted, random header line numbers
@@ -128,7 +134,7 @@ def sample_fastq(file_path, sample_size, sampled_indices=None, seed=None):
                 sampled_readlines.append(str(line, encoding='utf-8'))
                 ln += 1
             if j + 1 < len(sel_reads):
-                 j += 1
+                j += 1
             else:
                 break
         ln += 1
@@ -162,7 +168,8 @@ def save_sampled_fastq(sampled_reads, output_path):
     None
         Saves the sampled reads to the output file.
     """
-    open_func = gzip.open if output_path.endswith('.gz') else open  # Use gzip if output is .gz
+    open_func = gzip.open if output_path.endswith(
+        '.gz') else open  # Use gzip if output is .gz
 
     with open_func(output_path, 'wt') as f:  # Write in text mode ('wt')
         f.writelines(sampled_reads)
@@ -187,22 +194,32 @@ def do_statistic(result):
     pandas.DataFrame
         Updated DataFrame with additional columns for calculated statistics.
     """
-    average = result.mean(numeric_only=True).to_frame().T  # Calculate mean for numeric columns
-    region = (result['Sequenced variable region'].mode().values)  # Find the most common variable region
-    region = ' / '.join(str(r) for r in region)  # Format the result for better readability
-    region = region.replace('\'', '').replace('[', '').replace(']', '')  # Clean up formatting
+    average = result.mean(numeric_only=True).to_frame(
+    ).T  # Calculate mean for numeric columns
+    # Find the most common variable region
+    region = (result['Sequenced variable region'].mode().values)
+    # Format the result for better readability
+    region = ' / '.join(str(r) for r in region)
+    region = region.replace('\'', '').replace(
+        '[', '').replace(']', '')  # Clean up formatting
     average['Sequenced variable region'] = region
     if 'Not properly paired' not in average.columns:
-        average['Not properly paired'] = 'not paired'  # Handle cases where reads are not paired
-    std_dev = result.std(numeric_only=True).to_frame().T  # Calculate standard deviation for numeric columns
-    statistic = pd.concat([average, std_dev], axis=0)  # Combine mean and standard deviation dataframes
+        # Handle cases where reads are not paired
+        average['Not properly paired'] = 'not paired'
+    # Calculate standard deviation for numeric columns
+    std_dev = result.std(numeric_only=True).to_frame().T
+    # Combine mean and standard deviation dataframes
+    statistic = pd.concat([average, std_dev], axis=0)
     # Select relevant columns and reorder them
     statistic = statistic[['Number of Reads', 'Unaligned Reads [%]', 'Not properly paired',
                            'Sequenced variable region', 'V1', 'V2', 'V3', 'V4', 'V5', 'V6',
                            'V7', 'V8', 'V9', 'Not aligned to a variable region']]
-    statistic['row_descriptor'] = ['Average', 'Standard deviation']  # Add descriptors for the statistics
-    statistic = statistic.set_index('row_descriptor')  # Set the row descriptors as the index
-    result = pd.concat([statistic, result], axis=0)  # Combine the statistical results with the original data
+    # Add descriptors for the statistics
+    statistic['row_descriptor'] = ['Average', 'Standard deviation']
+    # Set the row descriptors as the index
+    statistic = statistic.set_index('row_descriptor')
+    # Combine the statistical results with the original data
+    result = pd.concat([statistic, result], axis=0)
     return result
 
 
@@ -228,13 +245,17 @@ def do_output(result, new_file, single_file):
     None
         Saves the results to the specified file.
     """
-    
-    warnings.simplefilter(action='ignore', category=FutureWarning)  # Ignore warnings about future behavior
-    result = pd.DataFrame(result).T.sort_index()  # Convert the dictionary to a DataFrame and sort by index
+
+    # Ignore warnings about future behavior
+    warnings.simplefilter(action='ignore', category=FutureWarning)
+    # Convert the dictionary to a DataFrame and sort by index
+    result = pd.DataFrame(result).T.sort_index()
     for column in result:
-        result[column] = pd.to_numeric(result[column], errors='ignore')  # Convert columns to numeric where possible
+        # Convert columns to numeric where possible
+        result[column] = pd.to_numeric(result[column], errors='ignore')
     if single_file is False:
-        result = do_statistic(result)  # If multiple files, calculate statistics
+        # If multiple files, calculate statistics
+        result = do_statistic(result)
     else:
         # Select relevant columns for single file processing
         result = result[['Number of Reads', 'Unaligned Reads [%]', 'Not properly paired',
@@ -268,30 +289,34 @@ def process_file(fq_file, path, bowtie2_params, sample_size=None):
         A dictionary with processing results, including file name and metrics. Returns None if an error 
         occurs during processing.
     """
-    
+
     paired = False
     result = {}
     try:
         with tempfile.TemporaryDirectory() as temp_path:
             file_name = os.path.basename(fq_file)
-            read2_file = os.path.join(os.path.dirname(fq_file), file_name.replace('_R1_', '_R2_'))
+            read2_file = os.path.join(os.path.dirname(
+                fq_file), file_name.replace('_R1_', '_R2_'))
             if '_R1_' in file_name and os.path.exists(read2_file):
                 paired = True  # Paired-end sequencing detected
 
             if sample_size:  # Perform sampling if required
-                sampled_reads_R1, sampled_indices = sample_fastq(fq_file, sample_size)
+                sampled_reads_R1, sampled_indices = sample_fastq(
+                    fq_file, sample_size)
                 temp_fastq_R1 = os.path.join(temp_path, 'sampled_R1.fastq')
                 save_sampled_fastq(sampled_reads_R1, temp_fastq_R1)
                 fq_file = temp_fastq_R1
 
                 if paired:  # Process the reverse reads for paired-end data
-                    sampled_reads_R2, _ = sample_fastq(read2_file, sample_size, sampled_indices)
+                    sampled_reads_R2, _ = sample_fastq(
+                        read2_file, sample_size, sampled_indices)
                     temp_fastq_R2 = os.path.join(temp_path, 'sampled_R2.fastq')
                     save_sampled_fastq(sampled_reads_R2, temp_fastq_R2)
                     read2_file = temp_fastq_R2
 
             # Perform alignment and overlap analysis
-            aligned_path, Error = mapbowtie2(fq_file, read2_file, path, temp_path, paired, bowtie2_params)
+            aligned_path, Error = mapbowtie2(
+                fq_file, read2_file, path, temp_path, paired, bowtie2_params)
             if Error:
                 return None
             overlap(path, temp_path, aligned_path)
@@ -327,14 +352,15 @@ def workflow(file_dir, new_file, write_csv, sample_size, bowtie2_params):
     None
         Executes the workflow and outputs results as specified.
     """
-    
+
     path = files_manager.get_lib()
     buildbowtie2(path)  # Prepare Bowtie2 library
     result = {}
     single_file = False
 
     if file_dir.endswith('.biom'):  # Handle BIOM file input
-        temp_fastq = os.path.join(tempfile.gettempdir(), 'temp_sequences.fastq')
+        temp_fastq = os.path.join(
+            tempfile.gettempdir(), 'temp_sequences.fastq')
         biom_to_fastq(file_dir, temp_fastq)
         result = process_file(temp_fastq, path, bowtie2_params, sample_size)
         single_file = True
@@ -367,29 +393,32 @@ def main():
     -------
     None
         Executes the script based on user-provided inputs.
-    
+
     Notes
     -----
     - Command-line usage should follow the format specified in the argparse help message.
     - Ensure all required dependencies (Bowtie2, Bedtools) are installed and accessible.
     """
-    
+
     parser = argparse.ArgumentParser(prog='VX detector', description=(
         'This program tries to find which variable region of the 16S sequence was sequenced'))
-    parser.add_argument('dir_path', help=('Directory path of the directory containing multiple fastq or fasta files.'))
-    parser.add_argument('-o', '--output', dest='output_file', default=sys.stdout, 
+    parser.add_argument('dir_path', help=(
+        'Directory path of the directory containing multiple fastq or fasta files.'))
+    parser.add_argument('-o', '--output', dest='output_file', default=sys.stdout,
                         help='User can specify a file format in which the output is written in the Output folder.')
-    parser.add_argument('-c', '--csv', dest='write_csv', action='store_true', 
+    parser.add_argument('-c', '--csv', dest='write_csv', action='store_true',
                         help='If set the output will be written in a .csv file in the Output folder')
-    parser.add_argument('-s', '--sample_size', dest='sample_size', type=int, default=1000, 
+    parser.add_argument('-s', '--sample_size', dest='sample_size', type=int, default=1000,
                         help='Number of reads to sample from each FASTQ file')
-    parser.add_argument('-b','--bowtie2_params', dest='bowtie2_params', default= None,
+    parser.add_argument('-b', '--bowtie2_params', dest='bowtie2_params', default=None,
                         help='Additional parameters to pass to Bowtie2')
     # Parse the user input arguments
     args = parser.parse_args()
-    
+
     # Start the workflow with provided arguments
-    workflow(args.dir_path, args.output_file, args.write_csv, args.sample_size, args.bowtie2_params)
+    workflow(args.dir_path, args.output_file, args.write_csv,
+             args.sample_size, args.bowtie2_params)
+
 
 if __name__ == '__main__':
     main()  # Entry point of the script
