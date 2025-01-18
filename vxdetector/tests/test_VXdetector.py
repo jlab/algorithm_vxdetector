@@ -34,7 +34,7 @@ class test_do_output(unittest.TestCase):
         shutil.rmtree(self.fp_tmpdir)
 
     def test_csv_output(self):
-        new_file = f'{self.fp_tmpdir}/test.csv'
+        new_file = f'{self.fp_tmpdir}test.csv'
         single_file = True
         vx.do_output(self.result, new_file, single_file)
         content = []
@@ -63,7 +63,7 @@ class test_do_output(unittest.TestCase):
                                            'V6': 0.0122571189279732,
                                            }}
         single_file = True
-        new_file = f'{self.fp_tmpdir}/test3.csv'
+        new_file = f'{self.fp_tmpdir}test3.csv'
         vx.do_output(mixed_result, new_file, single_file)
         content = []
         with open(self.output_test)as f:
@@ -90,7 +90,7 @@ class test_do_output(unittest.TestCase):
         vx.do_output(self.result, new_file, single_file)
         sys.stdout = sys.__stdout__
         self.assertEqual(capturedOutput.getvalue(), expected)
-        new_file = f'{self.fp_tmpdir}/test2.csv'
+        new_file = f'{self.fp_tmpdir}test2.csv'
         vx.do_output(self.result, new_file, single_file)
         self.assertTrue(os.path.exists(new_file))
 
