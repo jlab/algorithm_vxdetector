@@ -1,0 +1,15 @@
+name: vxdetector
+channels:
+  - bioconda
+  - conda-forge
+  - defaults
+dependencies:
+  - flake8
+  - pandas
+  - samtools
+  - bedtools
+  - bowtie2
+  - coverage >= 6  # to ensure lcov option is available
+  - pip  # Add pip to handle packages not available in conda
+  - pip:
+      - pynose  # Install pynose via pip, if available
