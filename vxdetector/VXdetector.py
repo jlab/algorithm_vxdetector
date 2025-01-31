@@ -6,7 +6,7 @@ import os
 import sys
 import warnings
 import pandas as pd
-import Output_counter as Output_counter
+import Output_counter
 import files_manager as files_manager
 from interact_bowtie2 import mapbowtie2, buildbowtie2
 from interact_bedtools import overlap
