@@ -6,10 +6,10 @@ import os
 import sys
 import warnings
 import pandas as pd
-import Output_counter
-import files_manager as files_manager
-from interact_bowtie2 import mapbowtie2, buildbowtie2
-from interact_bedtools import overlap
+import vxdetector.Output_counter as Output_counter
+import vxdetector.files_manager as files_manager
+from vxdetector.interact_bowtie2 import mapbowtie2, buildbowtie2
+from vxdetector.interact_bedtools import overlap
 import tempfile
 from multiprocessing import Pool
 import biom
