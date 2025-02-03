@@ -194,7 +194,8 @@ class test_workflow(unittest.TestCase):
 
     def test_no_fastq(self):
         with self.assertRaises(ValueError) as cm:
-            vx.workflow(f'{self.path}test_data/Indexed_bt2', sys.stdout, False, 1000, None)
+            vx.workflow(f'{self.path}test_data/Indexed_bt2', sys.stdout,
+                        False, 1000, None)
         self.assertEqual('There were no FASTQ files in this directory',
                          str(cm.exception))
 
