@@ -23,7 +23,7 @@ def buildbowtie2(path):
     # Check if the index already exists; if not, build it
     if not os.path.exists(f'{output_path}.1.bt2'):
         os.system(
-            f'{bowtie2_path}-build -f {input_ref}{output_path} > /dev/null')
+            f'{bowtie2_path}-build -f {input_ref} {output_path} > /dev/null')
 
 
 def mapbowtie2(
@@ -77,13 +77,14 @@ def mapbowtie2(
         cmd_bed = [bedtools_path, 'bamtobed', '-i', 'stdin']
 
         # Run the Bowtie2 and Samtools pipeline
-        with open(log_path, 'w') as log_f, open(aligned_path, 'w') as output_f:
+        with open(log_path, 'w') as log_file, \
+             open(aligned_path, 'w') as output_file:
             bowtie_process = subprocess.Popen(
-                bowtie2_base_cmd, stderr=log_f, stdout=subprocess.PIPE)
+                bowtie2_base_cmd, stderr=log_file, stdout=subprocess.PIPE)
             samtools_process = subprocess.Popen(
                 cmd_sam, stdin=bowtie_process.stdout, stdout=subprocess.PIPE)
             subprocess.run(
-                cmd_bed, stdin=samtools_process.stdout, stdout=output_f)
+                cmd_bed, stdin=samtools_process.stdout, stdout=output_file)
 
     # Check for errors in the Bowtie2 log file
     with open(log_path, 'r') as log:

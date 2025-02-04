@@ -31,12 +31,14 @@ class test_mapbowtie2(unittest.TestCase):
         paired = False
         temp_path = self.fp_tmpdir
         aligned_path, Error = ibo.mapbowtie2(self.fasta_file, self.read2_file,
-                                             path, temp_path, paired)
-        self.assertEqual(aligned_path, f'{temp_path}unpaired.bam')
+                                             path, temp_path, paired,
+                                             bowtie2_params="")
+        self.assertEqual(aligned_path, f'{temp_path}unpaired.bed')
         self.assertEqual(Error, False)
         paired = True
         aligned_path, Error = ibo.mapbowtie2(self.fasta_file, self.read2_file,
-                                             path, temp_path, paired)
+                                             path, temp_path, paired,
+                                             bowtie2_params="")
         self.assertEqual(aligned_path, f'{temp_path}paired.bed')
         self.assertEqual(Error, False)
 
@@ -52,7 +54,8 @@ class test_mapbowtie2(unittest.TestCase):
             for line in f:
                 content.append(line.strip().split())
         ibo.mapbowtie2(self.fasta_file, self.read2_file,
-                       path, temp_path, paired)
+                       path, temp_path, paired,
+                       bowtie2_params="")
         os.system(f'{samtools_path} view {temp_path}unpaired.bam '
                   f'> {temp_path}unpaired.sam')
         output = []
@@ -66,7 +69,8 @@ class test_mapbowtie2(unittest.TestCase):
             for line in f:
                 content.append(line.strip().split())
         ibo.mapbowtie2(self.fasta_file, self.read2_file,
-                       path, temp_path, paired)
+                       path, temp_path, paired,
+                       bowtie2_params="")
         output = []
         with open(f'{temp_path}paired.bed')as f:
             for line in f:
@@ -78,12 +82,14 @@ class test_mapbowtie2(unittest.TestCase):
         read2_file = f'{path}test_data/paired/BED.bed'
         paired = True
         aligned_path, Error = ibo.mapbowtie2(self.fasta_file, read2_file,
-                                             path, self.fp_tmpdir, paired)
+                                             path, self.fp_tmpdir, paired,
+                                             bowtie2_params="")
         self.assertEqual(Error, True)
         paired = False
         fasta_file_local = f'{path}test_data/paired/BED.bed'
         aligned_path, Error = ibo.mapbowtie2(fasta_file_local, read2_file,
-                                             path, self.fp_tmpdir, paired)
+                                             path, self.fp_tmpdir, paired,
+                                             bowtie2_params="")
         self.assertEqual(Error, True)
 
     def test_no_index(self):
