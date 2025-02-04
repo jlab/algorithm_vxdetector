@@ -214,6 +214,6 @@ class test_workflow(unittest.TestCase):
                          'mapping-quality', str(cm.exception))
         with self.assertRaises(ValueError) as cm:
             vx.workflow(f'{self.path}test_data/test_dir/no_qual_'
-                        'paired_R1_001.fastq', sys.stdout, False, 1000, None)
+                        'paired_R1_001.fastq', sys.stdout, False, 100, None)
         self.assertEqual('This file has no Reads of the required '
                          'mapping-quality', str(cm.exception))
