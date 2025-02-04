@@ -54,8 +54,7 @@ class test_mapbowtie2(unittest.TestCase):
             for line in f:
                 content.append(line.strip().split())
         ibo.mapbowtie2(self.fasta_file, self.read2_file,
-                       path, temp_path, paired,
-                       bowtie2_params="")
+                       path, temp_path, paired)
         os.system(f'{samtools_path} view {temp_path}unpaired.bam '
                   f'> {temp_path}unpaired.sam')
         output = []
@@ -69,8 +68,7 @@ class test_mapbowtie2(unittest.TestCase):
             for line in f:
                 content.append(line.strip().split())
         ibo.mapbowtie2(self.fasta_file, self.read2_file,
-                       path, temp_path, paired,
-                       bowtie2_params="")
+                       path, temp_path, paired)
         output = []
         with open(f'{temp_path}paired.bed')as f:
             for line in f:
