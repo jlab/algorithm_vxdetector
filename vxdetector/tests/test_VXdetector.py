@@ -151,7 +151,7 @@ class test_workflow(unittest.TestCase):
         expected = f'{self.path}test_data/Output_test.csv'
         actual = f'{self.fp_tmpdir}/singleFile_test.csv'
         test_file = f'{self.path}test_data/5011_S225_L001_R1_001.fastq.gz'
-        vx.workflow(test_file, actual, False)
+        vx.workflow(test_file, actual, False, 100, None)
         content = []
         with open(expected)as f:
             for line in f:
@@ -166,7 +166,7 @@ class test_workflow(unittest.TestCase):
         expected = f'{self.path}test_data/dir_test.csv'
         actual = f'{self.path}/test_data/dir_test_actual.csv'
         test_file = f'{self.path}test_data/test_dir/'
-        vx.workflow(test_file, actual, False)
+        vx.workflow(test_file, actual, False, 100, None)
         content = []
         with open(expected)as f:
             for line in f:
@@ -181,7 +181,7 @@ class test_workflow(unittest.TestCase):
         expected = f'{self.path}test_data/Output_test.csv'
         actual = sys.stdout
         test_file = f'{self.path}test_data/5011_S225_L001_R1_001.fastq.gz'
-        vx.workflow(test_file, actual, True)
+        vx.workflow(test_file, actual, False, 100, None)
         content = []
         with open(expected)as f:
             for line in f:
@@ -194,25 +194,26 @@ class test_workflow(unittest.TestCase):
 
     def test_no_fastq(self):
         with self.assertRaises(ValueError) as cm:
-            vx.workflow(f'{self.path}test_data/Indexed_bt2', sys.stdout, False)
+            vx.workflow(f'{self.path}test_data/Indexed_bt2', sys.stdout,
+                        False, 100, None)
         self.assertEqual('There were no FASTQ files in this directory',
                          str(cm.exception))
 
     def test_Error(self):
         with self.assertRaises(ValueError) as cm:
             vx.workflow(f'{self.path}test_data/Output_test.csv',
-                        sys.stdout, False)
+                        sys.stdout, False, 100, None)
         self.assertEqual('This file does not look like a fastq file',
                          str(cm.exception))
 
     def test_raise(self):
         with self.assertRaises(ValueError) as cm:
             vx.workflow(f'{self.path}test_data/test_dir/no_qual_test.fastq',
-                        sys.stdout, False)
+                        sys.stdout, False, 100, None)
         self.assertEqual('This file has no Reads of the required '
                          'mapping-quality', str(cm.exception))
         with self.assertRaises(ValueError) as cm:
             vx.workflow(f'{self.path}test_data/test_dir/no_qual_'
-                        'paired_R1_001.fastq', sys.stdout, False)
+                        'paired_R1_001.fastq', sys.stdout, False, 100, None)
         self.assertEqual('This file has no Reads of the required '
                          'mapping-quality', str(cm.exception))

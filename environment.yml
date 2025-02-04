@@ -13,3 +13,4 @@ dependencies:
   - pip  # Add pip to handle packages not available in conda
   - pip:
       - pynose  # Install pynose via pip, if available
+      - biom-format
